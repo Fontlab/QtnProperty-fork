@@ -20,7 +20,10 @@ limitations under the License.
 #include "PropertySet.h"
 #include "PropertyConnector.h"
 
+#ifdef SCRIPT_ENABLED
 #include <QScriptEngine>
+#endif
+
 #include <QCoreApplication>
 
 const qint32 QtnPropertyIDInvalid = -1;
@@ -64,6 +67,8 @@ private:
 	QtnPropertyBase::DelegateInfoCallback m_callback;
 	QScopedPointer<QtnPropertyDelegateInfo> m_delegateInfo;
 };
+
+#ifdef SCRIPT_ENABLED
 
 static QScriptValue qtnPropertyChangeReasonToScriptValue(
 	QScriptEngine *engine, const QtnPropertyChangeReason &val)
@@ -110,7 +115,6 @@ static void qtnPropertyBasePtrFromScriptValue(
 {
 	val = qobject_cast<const QtnPropertyBase *>(obj.toQObject());
 }
-
 void qtnScriptRegisterPropertyTypes(QScriptEngine *engine)
 {
 	qScriptRegisterMetaType(engine, qtnPropertyChangeReasonToScriptValue,
@@ -172,6 +176,7 @@ void qtnScriptRegisterPropertyTypes(QScriptEngine *engine)
 		QScriptValue::ReadOnly | QScriptValue::Undeletable);
 }
 
+#endif
 extern bool qtnPropertyRegister();
 
 QtnPropertyBase::QtnPropertyBase(QObject *parent)

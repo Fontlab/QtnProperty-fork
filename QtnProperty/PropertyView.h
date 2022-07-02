@@ -84,7 +84,13 @@ public:
 	int valueLeftMargin() const;
 
 	bool isMouseCaptured() const;
-
+	
+	bool setLeadMargin(quint32 leadMargin);
+	void setSplitRatio(float v)
+	{
+		m_splitRatio = v;
+	}
+	
 public slots:
 	QtnAccessibilityProxy *accessibilityProxy();
 
@@ -187,9 +193,12 @@ private:
 	QtnPropertyViewStyle m_style;
 	int m_itemHeight;
 	quint32 m_itemHeightSpacing;
+	bool m_customLeadMargin_set = false;
+	quint32 m_customLeadMargin = 0;
 	int m_valueLeftMargin;
 	QColor m_linesColor;
 	QColor m_propertySetBackdroundColor;
+	QColor m_propertyAlternativeBackgroundColor;
 
 	float m_splitRatio;
 	std::unique_ptr<QRubberBand> m_rubberBand;

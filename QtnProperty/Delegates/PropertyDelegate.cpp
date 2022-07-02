@@ -218,14 +218,15 @@ void QtnPropertyDelegate::addSubItemBranchNode(
 							 QtnDrawContext &context, const QtnSubItem &item) {
 		auto &painter = *context.painter;
 		QRectF branchRect = item.rect;
-		qreal side = branchRect.height() / qreal(3.5);
+		qreal side = branchRect.height() / qreal(3);
 		QColor fillClr = context.palette().color(QPalette::Text);
-		QColor outlineClr = (item.state() != QtnSubItemStateNone)
-			? Qt::blue
-			: context.palette().color(QPalette::Text);
+		fillClr.setAlpha(100);
+//		QColor outlineClr = (item.state() != QtnSubItemStateNone)
+//			? Qt::blue
+//			: context.palette().color(QPalette::Text);
 
 		painter.save();
-		painter.setPen(outlineClr);
+		painter.setPen(Qt::NoPen);
 
 		QPainterPath branchPath;
 		if (stateProperty()->isCollapsed())

@@ -411,7 +411,7 @@ bool QtnPropertyDelegateWithValueEditor::createSubItemValueImpl(
 		QString valueText;
 		if (!toolTipImpl(valueText))
 			return QString();
-		return valueText;
+		return QString("<font>%1</font>").arg(valueText);
 	};
 
 	return true;

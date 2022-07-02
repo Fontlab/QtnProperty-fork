@@ -253,6 +253,14 @@ bool QtnPropertyView::setItemHeightSpacing(quint32 itemHeightSpacing)
 	return true;
 }
 
+bool QtnPropertyView::setLeadMargin(quint32 leadMargin)
+{
+	m_customLeadMargin = leadMargin;
+	m_customLeadMargin_set = true;
+	update();
+	return true;
+}
+
 void QtnPropertyView::setPropertyViewStyle(QtnPropertyViewStyle style)
 {
 	m_style = style;
@@ -344,7 +352,10 @@ void QtnPropertyView::paintEvent(QPaintEvent *e)
 	for (int i = firstVisibleItemIndex; i <= lastVisibleItemIndex; ++i)
 	{
 		const VisibleItem &vItem = m_visibleItems[i];
-
+		
+		if (i & 1)
+			painter.fillRect(itemRect, m_propertyAlternativeBackgroundColor);
+		
 		drawItem(painter, itemRect, vItem);
 		auto delegate = vItem.item->delegate.get();
 		Q_ASSERT(delegate); // cannot be null
@@ -1059,8 +1070,9 @@ void QtnPropertyView::updateStyleStuff()
 
 	m_propertySetBackdroundColor = m_linesColor =
 		palette().color(QPalette::Button);
-
-	m_valueLeftMargin = style()->pixelMetric(QStyle::PM_ButtonMargin);
+	m_propertyAlternativeBackgroundColor = palette().color(QPalette::AlternateBase); 
+	
+	m_valueLeftMargin = m_customLeadMargin_set ? m_customLeadMargin : style()->pixelMetric(QStyle::PM_ButtonMargin);
 }
 
 bool QtnPropertyView::ensureVisibleItemByIndex(int index)

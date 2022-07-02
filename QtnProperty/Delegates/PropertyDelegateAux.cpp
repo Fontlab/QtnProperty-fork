@@ -55,8 +55,8 @@ void QtnSubItem::setPropertyDescriptionAsTooltip(
 		auto descr = property.description();
 		if (descr.isEmpty())
 			return property.displayName();
-
-		return descr;
+		
+		return QString("<font>%1</font>").arg(descr);
 	};
 }
 

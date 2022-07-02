@@ -1,5 +1,5 @@
 
-QT += core gui widgets script
+QT += core gui widgets
 
 SOURCES +=\
     $$PWD/PropertyBase.cpp \

@@ -257,6 +257,7 @@ bool QtnPropertyView::setLeadMargin(quint32 leadMargin)
 {
 	m_customLeadMargin = leadMargin;
 	m_customLeadMargin_set = true;
+	updateStyleStuff();
 	update();
 	return true;
 }

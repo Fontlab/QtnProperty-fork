@@ -208,7 +208,7 @@ void QtnPropertyDelegate::addSubItemBranchNode(
 
 	QtnSubItem brItem(context.rect.marginsRemoved(context.margins));
 	brItem.rect.setWidth(brItem.rect.height());
-	context.margins.setLeft(context.margins.left() + brItem.rect.height());
+	context.margins.setLeft(context.margins.left() + brItem.rect.height() / 2);
 	brItem.trackState();
 
 	if (!brItem.rect.isValid())
@@ -227,7 +227,9 @@ void QtnPropertyDelegate::addSubItemBranchNode(
 
 		painter.save();
 		painter.setPen(Qt::NoPen);
-
+		
+		branchRect.translate(-side, 0);
+		
 		QPainterPath branchPath;
 		if (stateProperty()->isCollapsed())
 		{
@@ -249,6 +251,8 @@ void QtnPropertyDelegate::addSubItemBranchNode(
 				branchRect.bottom() - side - 1);
 			branchPath.closeSubpath();
 		}
+		
+		branchRect.translate(side, 0);
 
 		if (painter.testRenderHint(QPainter::Antialiasing))
 		{

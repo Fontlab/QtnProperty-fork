@@ -63,7 +63,7 @@ QWidget *QtnPropertyDelegateEnum::createValueEditorImpl(
 		return true;
 	});
 
-	combo->setGeometry(rect);
+	combo->setGeometry(rect.adjusted(0, 0, 0, -1));
 
 	new QtnPropertyEnumComboBoxHandler(this, *combo);
 

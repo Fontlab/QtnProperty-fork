@@ -198,7 +198,7 @@ QtnPropertyDelegateQString::QtnPropertyDelegateQString(
 	QtnPropertyQStringBase &owner)
 	: QtnPropertyDelegateTyped<QtnPropertyQStringBase>(owner)
 	, m_maxLength(0x1000000)
-	, m_multiline(true)
+	, m_multiline(false)
 {
 }
 

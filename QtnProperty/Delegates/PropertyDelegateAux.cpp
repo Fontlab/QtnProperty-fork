@@ -198,17 +198,18 @@ bool QtnSubItem::event(QtnEventContext &context)
 						}));
 				context.widget->connectPropertyToEdit(
 					editProperty, *connections.get());
-			}
-			auto editor = propertyToEdit.createEditor();
-			if (editor)
-			{
-				if (editable)
+				
+				auto editor = propertyToEdit.createEditor();
+				if (editor)
 				{
-					QObject::connect(editor, &QObject::destroyed,
-						[connections]() { connections->disconnect(); });
+					if (editable)
+					{
+						QObject::connect(editor, &QObject::destroyed,
+							[connections]() { connections->disconnect(); });
+					}
+					
+					qtnStartInplaceEdit(editor);
 				}
-
-				qtnStartInplaceEdit(editor);
 			}
 		}
 		return result;

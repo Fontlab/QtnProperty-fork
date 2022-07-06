@@ -165,19 +165,19 @@ void QtnPropertyDelegateWithValues::addSubItemBackground(
 
 	bgItem.drawHandler = [](QtnDrawContext &context, const QtnSubItem &item) //
 	{
-		auto &painter = *context.painter;
-		const auto &rect = item.rect;
-		auto splitPos = context.splitPos;
+//		auto &painter = *context.painter;
+//		const auto &rect = item.rect;
+//		auto splitPos = context.splitPos;
 
-		QPen oldPen = painter.pen();
-		QPen linesPen(context.palette().color(QPalette::Button));
-		painter.setPen(linesPen);
+//		QPen oldPen = painter.pen();
+//		QPen linesPen(context.palette().color(QPalette::Button));
+//		painter.setPen(linesPen);
 
-		// draw item borders
-		painter.drawLine(rect.bottomLeft(), rect.bottomRight());
-		painter.drawLine(splitPos, rect.top(), splitPos, rect.bottom());
+//		// draw item borders
+//		painter.drawLine(rect.bottomLeft(), rect.bottomRight());
+//		painter.drawLine(splitPos, rect.top(), splitPos, rect.bottom());
 
-		painter.setPen(oldPen);
+//		painter.setPen(oldPen);
 	};
 
 	subItems.append(bgItem);

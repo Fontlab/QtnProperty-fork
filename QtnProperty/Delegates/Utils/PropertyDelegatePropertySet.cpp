@@ -56,10 +56,13 @@ void QtnPropertyDelegatePropertySet::createSubItemsImpl(
 									 const QtnSubItem &item) {
 
 				// fill background
-				context.painter->fillRect(item.rect,
-					(context.isActive)
-						? context.palette().color(QPalette::Highlight)
-						: context.alternateColor());
+				if (context.isActive)
+					context.painter->fillRect(item.rect, context.palette().color(QPalette::Highlight));
+					
+//				context.painter->fillRect(item.rect,
+//					(context.isActive)
+//						? context.palette().color(QPalette::Highlight)
+//						: context.alternateColor());
 
 			};
 

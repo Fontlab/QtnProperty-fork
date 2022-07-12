@@ -125,6 +125,11 @@ const QtnEnumValueInfo *QtnEnumInfo::findByDisplayName(
 
 const QtnEnumValueInfo *QtnEnumInfo::fromStr(const QString &str) const
 {
+	int columns = str.indexOf("::");
+	if (columns > 0 && str.left(columns).compare(name(), Qt::CaseInsensitive) == 0)
+	{
+		return findByDisplayName(str.mid(columns + 2));
+	}
 	return findByName(str.trimmed());
 }
 

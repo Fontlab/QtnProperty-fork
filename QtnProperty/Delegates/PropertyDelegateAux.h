@@ -283,8 +283,8 @@ void fixMinMaxVariant(QVariant &minv, QVariant &maxv)
 			maxv = T(max);
 		}
 	}
-
-	if (minv.isValid() && maxv.isValid() && maxv < minv)
+	
+	if (minv.isValid() && maxv.isValid() && maxv.toULongLong() < minv.toULongLong())
 	{
 		minv = QVariant();
 		maxv = QVariant();

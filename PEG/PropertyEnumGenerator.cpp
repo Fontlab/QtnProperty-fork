@@ -254,13 +254,13 @@ void PropertySetCode::setDestructorCode(QString _name, QString _code)
 void PropertySetCode::generateHFile(TextStreamIndent &s) const
 {
 	generateSubPropertySetsDeclarations(s);
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << QString("class %1: public QtnPropertySet").arg(selfType);
 	s.newLine() << "{";
 	s.addIndent();
 	s.newLine() << "Q_OBJECT";
 	s.newLine() << QString("//Q_DISABLE_COPY(%1)").arg(selfType);
-	s << endl;
+	s << Qt::endl;
 	s.newLine(-1) << "public:";
 	s.newLine() << "// constructor declaration";
 	s.newLine() << QString("explicit %1(QObject* parent = %2);")
@@ -271,7 +271,7 @@ void PropertySetCode::generateHFile(TextStreamIndent &s) const
 	s.newLine() << "// assignment declaration";
 	s.newLine() << QString("%1& operator=(const %1& other);").arg(selfType);
 	generateChildrenDeclaration(s);
-	s << endl;
+	s << Qt::endl;
 	s.newLine(-1) << "protected:";
 	s.newLine() << "// cloning implementation";
 	s.newLine() << QString(
@@ -282,7 +282,7 @@ void PropertySetCode::generateHFile(TextStreamIndent &s) const
 	s.newLine() << QString("bool copyValuesImpl(QtnPropertySet* "
 						   "propertySetCopyFrom, QtnPropertyState ignoreMask) "
 						   "override;");
-	s << endl;
+	s << Qt::endl;
 	s.newLine(-1) << "private:";
 	s.newLine() << "void init();";
 	s.newLine() << "void connectSlots();";
@@ -299,7 +299,7 @@ void PropertySetCode::generateCppFile(TextStreamIndent &s) const
 	generateSubPropertySetsImplementations(s);
 
 	// constructor implementation
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << QString("%1::%1(QObject* parent)").arg(selfType);
 	s.addIndent();
 	s.newLine() << QString(": QtnPropertySet(parent)");
@@ -317,7 +317,7 @@ void PropertySetCode::generateCppFile(TextStreamIndent &s) const
 	s.newLine() << "}";
 
 	// destructor implementation
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << selfType << "::~" << selfType << "()";
 	s.newLine() << "{";
 	s.addIndent();
@@ -328,19 +328,19 @@ void PropertySetCode::generateCppFile(TextStreamIndent &s) const
 	s.newLine() << "}";
 
 	// assignment implementation
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << QString("%1& %1::operator=(const %1& other)").arg(selfType);
 	s.newLine() << "{";
 	s.addIndent();
-	s.newLine() << "Q_UNUSED(other);" << endl;
+	s.newLine() << "Q_UNUSED(other);" << Qt::endl;
 	generateChildrenCopy(s);
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << "return *this;";
 	s.delIndent();
 	s.newLine() << "}";
 
 	// cloning implementation
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << QString(
 		"QtnPropertySet* %1::createNewImpl(QObject* parentForNew) const")
 					   .arg(selfType);
@@ -349,7 +349,7 @@ void PropertySetCode::generateCppFile(TextStreamIndent &s) const
 	s.newLine() << QString("return new %1(parentForNew);").arg(selfType);
 	s.delIndent();
 	s.newLine() << "}";
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << QString(
 		"QtnPropertySet* %1::createCopyImpl(QObject* parentForCopy) const")
 					   .arg(selfType);
@@ -362,19 +362,19 @@ void PropertySetCode::generateCppFile(TextStreamIndent &s) const
 	s.newLine() << "}";
 
 	// copy values implementation
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << QString("bool %1::copyValuesImpl(QtnPropertySet* "
 						   "propertySetCopyFrom, QtnPropertyState ignoreMask)")
 					   .arg(selfType);
 	s.newLine() << "{";
 	s.addIndent();
-	s.newLine() << "Q_UNUSED(ignoreMask);" << endl;
+	s.newLine() << "Q_UNUSED(ignoreMask);" << Qt::endl;
 	generateCopyValues(s);
 	s.delIndent();
 	s.newLine() << "}";
 
 	// initialization
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << "void " << selfType << "::init()";
 	s.newLine() << "{";
 	s.addIndent();
@@ -387,14 +387,14 @@ void PropertySetCode::generateCppFile(TextStreamIndent &s) const
 	s.newLine() << "}";
 
 	// slots connect/disconnect
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << QString("void %1::connectSlots()").arg(selfType);
 	s.newLine() << "{";
 	s.addIndent();
 	generateSlotsConnections(s, "connect");
 	s.delIndent();
 	s.newLine() << "}";
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << QString("void %1::disconnectSlots()").arg(selfType);
 	s.newLine() << "{";
 	s.addIndent();
@@ -404,7 +404,7 @@ void PropertySetCode::generateCppFile(TextStreamIndent &s) const
 	generateSlotsImplementation(s);
 
 	// delegates connects
-	s << endl;
+	s << Qt::endl;
 	s.newLine() << QString("void %1::connectDelegates()").arg(selfType);
 	s.newLine() << "{";
 	s.addIndent();
@@ -527,7 +527,7 @@ void PropertySetCode::generateSlotsImplementation(TextStreamIndent &s) const
 {
 	for (auto it = slots_code.begin(); it != slots_code.end(); ++it)
 	{
-		s << endl;
+		s << Qt::endl;
 		s.newLine() << QString("void %1::%2(%3)")
 						   .arg(selfType,
 							   slotName(it.key(), &it.value().member, nullptr),
@@ -548,7 +548,7 @@ void PropertySetCode::generateSlotsImplementation(TextStreamIndent &s) const
 		for (auto jt = (*it)->slots_code.begin(); jt != (*it)->slots_code.end();
 			 ++jt)
 		{
-			s << endl;
+			s << Qt::endl;
 			s.newLine() << QString("void %1::%2(%3)")
 							   .arg(selfType,
 								   slotName(jt.key(), &(*it)->name,
@@ -629,7 +629,7 @@ void PropertySetCode::generateCopyValues(TextStreamIndent &s) const
 					   .arg(selfType);
 	s.newLine() << "if (!theCopyFrom)";
 	s.newLine(1) << "return false;";
-	s << endl;
+	s << Qt::endl;
 
 	Q_ASSERT(members.size() >= subPropertySets.size());
 	auto mIt = members.begin();
@@ -654,7 +654,7 @@ void PropertySetCode::generateCopyValues(TextStreamIndent &s) const
 			s.newLine() << "}";
 		}
 
-		s << endl;
+		s << Qt::endl;
 	}
 
 	s.newLine() << "return true;";
@@ -957,7 +957,7 @@ void PEG::stop()
 
 void PEG::printError(QString error)
 {
-	m_errStream << error << endl;
+	m_errStream << error << Qt::endl;
 }
 
 void PEG::fatalError(QString error)
@@ -974,26 +974,26 @@ void PEG::generateOutputs()
 
 void PEG::generateHFile()
 {
-	m_hStream << "#ifndef " << m_hDefine << endl;
-	m_hStream << "#define " << m_hDefine << endl;
+	m_hStream << "#ifndef " << m_hDefine << Qt::endl;
+	m_hStream << "#define " << m_hDefine << Qt::endl;
 
 	for (auto it = code.begin(); it != code.end(); ++it)
 	{
 		(*it)->generateHFile(m_hStream);
 	}
 
-	m_hStream << endl << endl;
-	m_hStream << "#endif // " << m_hDefine << endl;
+	m_hStream << Qt::endl << Qt::endl;
+	m_hStream << "#endif // " << m_hDefine << Qt::endl;
 }
 
 void PEG::generateCppFile()
 {
-	m_cppStream << "#include \"" << m_hFileName << "\"" << endl;
+	m_cppStream << "#include \"" << m_hFileName << "\"" << Qt::endl;
 	for (auto it = code.begin(); it != code.end(); ++it)
 	{
 		(*it)->generateCppFile(m_cppStream);
 	}
-	m_cppStream << endl;
+	m_cppStream << Qt::endl;
 }
 /*
 void PEG::addIncludeH(QString name)

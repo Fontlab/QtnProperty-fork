@@ -23,6 +23,7 @@
 #include <QStack>
 #include <QSharedPointer>
 #include <QTextStream>
+#include <QMap>
 
 class TextStreamIndent: public QTextStream
 {
@@ -44,8 +45,8 @@ public:
                 newLine(info.indentOffset) << info.firstLine;
             }
         }
-
-        return *this << endl << QString(TAB_LEN*(m_indent+indentOffset), ' ');
+		
+		return *this << Qt::endl << QString(TAB_LEN*(m_indent+indentOffset), ' ');
     }
 
     void addIndent() { ++m_indent; }

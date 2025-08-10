@@ -90,6 +90,10 @@ public:
 	{
 		m_splitRatio = v;
 	}
+  
+  int visibleItemIndexByProperty(const QtnPropertyBase *property) const;
+  QRect visibleItemRect(int index) const;
+  QRect propertyActionRect(QtnPropertyBase *property, int actionIndex);
 	
 public slots:
 	QtnAccessibilityProxy *accessibilityProxy();
@@ -146,9 +150,6 @@ private:
 	void changeActivePropertyByIndex(int index);
 	QtnPropertyBase *visiblePropertyAtPoint(const QPoint &pos) const;
 	int visibleItemIndexByPoint(const QPoint &pos) const;
-	int visibleItemIndexByProperty(const QtnPropertyBase *property) const;
-	QRect visibleItemRect(int index) const;
-	QRect propertyActionRect(QtnPropertyBase *property, int actionIndex);
 
 	bool handleMouseEvent(int index, QEvent *e, QPoint mousePos);
 	bool handleEvent(

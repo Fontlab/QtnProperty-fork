@@ -1081,8 +1081,8 @@ bool QtnPropertyView::ensureVisibleItemByIndex(int index)
 	if (index < 0)
 		return false;
 
-	int vItemTop = index * m_itemHeight;
-	int vItemBottom = vItemTop + m_itemHeight;
+	int vItemTop = index * m_itemHeight - 4;
+	int vItemBottom = vItemTop + m_itemHeight + 4;
 
 	QRect rect = viewport()->rect();
 	int scrollPos = verticalScrollBar()->value();

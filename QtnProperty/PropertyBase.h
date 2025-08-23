@@ -22,6 +22,7 @@ limitations under the License.
 #include "Auxiliary/PropertyDelegateInfo.h"
 #include <QDataStream>
 #include <QVariant>
+#include <QIcon>
 #include <functional>
 
 class QScriptEngine;
@@ -66,6 +67,9 @@ public:
 
 	inline QString description() const;
 	void setDescription(const QString &description);
+
+	inline QIcon icon() const;
+	void setIcon(const QIcon &icon);
 
 	inline QtnPropertyID id() const;
 	void setId(QtnPropertyID id);
@@ -198,6 +202,7 @@ private:
 
 	QString m_displayName;
 	QString m_description;
+	QIcon m_icon;
 	QtnPropertyID m_id;
 
 	QtnPropertyState m_stateLocal;
@@ -222,6 +227,11 @@ QString QtnPropertyBase::displayName() const
 QString QtnPropertyBase::description() const
 {
 	return m_description;
+}
+
+QIcon QtnPropertyBase::icon() const
+{
+	return m_icon;
 }
 
 QtnPropertyID QtnPropertyBase::id() const

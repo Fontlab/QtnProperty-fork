@@ -22,6 +22,7 @@ limitations under the License.
 
 #include <QLineEdit>
 #include <QKeyEvent>
+#include <QIcon>
 
 static QIcon qtnResetIcon;
 
@@ -228,10 +229,22 @@ void QtnPropertyDelegateWithValues::addSubItemName(
 			context.painter->setFont(font);
 		}
 
-		context.painter->drawText(item.rect,
+		QRect textRect = item.rect;
+		// draw optional icon if provided
+		const QIcon icon = property()->icon();
+		if (!icon.isNull())
+		{
+      const int h = textRect.height();
+      const int iconHeight = 16;
+      QRect iconRect(textRect.left(), textRect.top() + (h - iconHeight) / 2, iconHeight, iconHeight);
+      icon.paint(context.painter, iconRect);
+			textRect.setLeft(textRect.left() + iconHeight + 4);
+		}
+
+		context.painter->drawText(textRect,
 			int(Qt::AlignLeading | Qt::AlignVCenter) | Qt::TextSingleLine,
 			qtnElidedText(
-				*context.painter, property()->displayName(), item.rect));
+				*context.painter, property()->displayName(), textRect));
 
 		context.painter->restore();
 	};

@@ -284,6 +284,19 @@ void QtnPropertyBase::setDescription(const QString &description)
 	emit propertyDidChange(QtnPropertyChangeReasonDescription);
 }
 
+void QtnPropertyBase::setIcon(const QIcon &icon)
+{
+	if (m_icon.cacheKey() == icon.cacheKey())
+		return;
+
+	// emit propertyWillChange(QtnPropertyChangeReasonUpdateDelegate,
+	// 	QtnPropertyValuePtr(const_cast<QIcon *>(&icon)), qMetaTypeId<QIcon>());
+
+	m_icon = icon;
+
+//	emit propertyDidChange(QtnPropertyChangeReasonUpdateDelegate);
+}
+
 void QtnPropertyBase::setId(QtnPropertyID id)
 {
 	if (m_id == id)

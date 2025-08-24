@@ -56,6 +56,7 @@ QTN_IMPORT_EXPORT QByteArray qtnDrawBorderAttr();
 QTN_IMPORT_EXPORT QByteArray qtnUpdateByScrollAttr();
 QTN_IMPORT_EXPORT QByteArray qtnAnimateAttr();
 QTN_IMPORT_EXPORT QByteArray qtnToolTipAttr();
+QTN_IMPORT_EXPORT QByteArray qtnDrawTextAttr();
 
 QTN_IMPORT_EXPORT QByteArray qtnXDisplayNameAttr();
 QTN_IMPORT_EXPORT QByteArray qtnXDescriptionAttr();
@@ -92,6 +93,7 @@ QTN_IMPORT_EXPORT QByteArray qtnGeoCoordDelegateName();
 QTN_IMPORT_EXPORT QByteArray qtnGeoPointDelegateName();
 QTN_IMPORT_EXPORT QByteArray qtnSliderBoxDelegate();
 QTN_IMPORT_EXPORT QByteArray qtnSpinBoxDelegate();
+QTN_IMPORT_EXPORT QByteArray qtnOpacityBoxDelegate();
 QTN_IMPORT_EXPORT QByteArray qtnSolidDelegateName();
 QTN_IMPORT_EXPORT QByteArray qtnLinkDelegateName();
 
@@ -105,6 +107,11 @@ QTN_IMPORT_EXPORT QByteArray qtnEditWidthAttr();
 QTN_IMPORT_EXPORT QByteArray qtnTitleAttr();
 
 QTN_IMPORT_EXPORT QByteArray qtnTranslateAttribute();
+
+// OpacityBox attributes
+QTN_IMPORT_EXPORT QByteArray qtnOpacityBackgroundColorAttr();
+QTN_IMPORT_EXPORT QByteArray qtnOpacityBarColorAttr();
+QTN_IMPORT_EXPORT QByteArray qtnOpacityCheckerAttr();
 
 struct QtnPropertyDelegateInfo;
 

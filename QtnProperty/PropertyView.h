@@ -94,7 +94,16 @@ public:
   int visibleItemIndexByProperty(const QtnPropertyBase *property) const;
   QRect visibleItemRect(int index) const;
   QRect propertyActionRect(QtnPropertyBase *property, int actionIndex);
-	
+  
+  // Dark mode support
+  bool isDarkMode() const { return m_isDarkMode; }
+  void setDarkMode(bool v) { if (m_isDarkMode != v) { m_isDarkMode = v; viewport()->update(); } }
+  
+  // Color callback support for delegates
+  using ColorCallback = std::function<QColor(const QPoint &, const QColor &, const QString &)>;
+  void setColorCallback(const ColorCallback &cb) { m_colorCallback = cb; }
+  ColorCallback colorCallback() const { return m_colorCallback; }
+
 public slots:
 	QtnAccessibilityProxy *accessibilityProxy();
 
@@ -207,6 +216,8 @@ private:
 	unsigned m_stopInvalidate;
 	bool m_mouseAtSplitter;
 	bool m_mouseCaptured;
+	bool m_isDarkMode = false;
+	ColorCallback m_colorCallback;
 
 	friend class QtnAccessibilityProxy;
 	QtnAccessibilityProxy *m_accessibilityProxy;

@@ -24,6 +24,9 @@ limitations under the License.
 #include <QStylePainter>
 #include <QEvent>
 #include <QVariant>
+#include <functional>
+#include <QPoint>
+#include <QColor>
 
 class QtnPropertyBase;
 class QtnPropertyView;
@@ -163,6 +166,8 @@ public:
 
 	const bool isActive;
 	const bool hasChildren;
+	const bool isDarkMode;
+	std::function<QColor(const QPoint &, const QColor &, const QString &)> colorCallback;
 
 	QStyle *style() const;
 	void initStyleOption(QStyleOption &option) const;
@@ -203,6 +208,8 @@ QTN_IMPORT_EXPORT QString qtnElidedText(const QPainter &painter,
 	const QString &text, const QRect &rect, bool *elided = 0);
 QTN_IMPORT_EXPORT void qtnDrawValueText(const QString &text, QPainter &painter,
 	const QRect &rect, QStyle *style = nullptr);
+
+QTN_IMPORT_EXPORT std::function<QColor(const QPoint &, const QColor &, const QString &)> qtnResolveColorCallback(QObject *start);
 
 template <typename T,
 	typename std::enable_if<std::is_floating_point<T>::value>::type * = nullptr>

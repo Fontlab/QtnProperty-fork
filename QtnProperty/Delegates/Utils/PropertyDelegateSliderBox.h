@@ -60,6 +60,7 @@ protected:
 	double m_multiplier;
 	QColor m_boxFillColor;
 	QString m_itemToolTip;
+	bool m_drawText;
 	QVariant m_min;
 	QVariant m_max;
 	QString m_suffix;

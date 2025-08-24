@@ -364,3 +364,15 @@ bool QtnPropertyToEdit::isValid() const
 {
 	return m_property && m_editorMaker;
 }
+
+std::function<QColor(const QPoint &, const QColor &, const QString &)> qtnResolveColorCallback(QObject *start)
+{
+	QObject *p = start;
+	while (p)
+	{
+		if (auto v = qobject_cast<QtnPropertyView *>(p))
+			return v->colorCallback();
+		p = p->parent();
+	}
+	return {};
+}

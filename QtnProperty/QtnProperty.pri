@@ -53,6 +53,7 @@ SOURCES +=\
     $$PWD/Delegates/Utils/PropertyDelegateMisc.cpp \
     $$PWD/Delegates/Utils/PropertyDelegatePropertySet.cpp \
     $$PWD/Delegates/Utils/PropertyDelegateSliderBox.cpp \
+    $$PWD/Delegates/Utils/PropertyDelegateOpacityBox.cpp \
     $$PWD/Delegates/Utils/PropertyDelegateGeoCoord.cpp \
     $$PWD/Delegates/Utils/PropertyDelegateGeoPoint.cpp \
     $$PWD/Utils/AccessibilityProxy.cpp \
@@ -141,6 +142,7 @@ HEADERS +=\
     $$PWD/Delegates/Utils/PropertyDelegateMisc.h \
     $$PWD/Delegates/Utils/PropertyDelegatePropertySet.h \
     $$PWD/Delegates/Utils/PropertyDelegateSliderBox.h \
+    $$PWD/Delegates/Utils/PropertyDelegateOpacityBox.h \
     $$PWD/Delegates/Utils/PropertyDelegateGeoCoord.h \
     $$PWD/Delegates/Utils/PropertyDelegateGeoPoint.h \
     $$PWD/Utils/AccessibilityProxy.h \

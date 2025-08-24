@@ -206,8 +206,18 @@ void QtnPropertyDelegateQColorSolid::drawValueImpl(
 QWidget *QtnPropertyDelegateQColorSolid::createValueEditorImpl(
 	QWidget *parent, const QRect &rect, QtnInplaceInfo *inplaceInfo)
 {
-	Q_UNUSED(rect);
 	Q_UNUSED(inplaceInfo);
+
+	// Try callback first
+	auto cb = qtnResolveColorCallback(parent);
+	if (cb)
+	{
+		QPoint screenBL = parent->mapToGlobal(rect.bottomLeft());
+		QColor chosen = cb(screenBL, owner(), owner().name());
+		if (chosen.isValid())
+			owner().setValue(chosen, editReason());
+		return nullptr;
+	}
 
 	QColorDialog dlg(owner(), parent);
 	if (dlg.exec() == QDialog::Accepted)
@@ -256,6 +266,22 @@ void QtnPropertyQColorLineEditBttnHandler::onToolButtonClicked(bool)
 	auto connection = QObject::connect(property, &QObject::destroyed,
 		[&destroyed]() mutable { destroyed = true; });
 	reverted = true;
+
+	// Try callback first
+	auto cb = qtnResolveColorCallback(editorBase());
+	if (cb)
+	{
+		QPoint screenBL = editor().toolButton->mapToGlobal(QPoint(0, editor().toolButton->height()));
+		QColor chosen = cb(screenBL, property->value(), property->name());
+		if (chosen.isValid() && !destroyed)
+		{
+			property->setValue(chosen, delegate()->editReason());
+		}
+		if (!destroyed)
+			QObject::disconnect(connection);
+		return;
+	}
+
 	auto dialog = new QColorDialog(property->value(), editorBase());
 	auto dialogContainer = connectDialog(dialog);
 

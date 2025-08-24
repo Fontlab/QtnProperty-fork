@@ -20,6 +20,7 @@ limitations under the License.
 #include "Delegates/Utils/PropertyEditorAux.h"
 #include "Delegates/PropertyDelegateFactory.h"
 #include "Delegates/Utils/PropertyDelegateSliderBox.h"
+#include "Delegates/Utils/PropertyDelegateOpacityBox.h"
 #include "PropertyDelegateAttrs.h"
 
 #include <QLocale>
@@ -82,6 +83,12 @@ void QtnPropertyDelegateUInt64::Register(QtnPropertyDelegateFactory &factory)
 			QtnPropertyDelegateSlideBoxTyped<QtnPropertyUInt64Base>,
 			QtnPropertyUInt64Base>,
 		qtnSliderBoxDelegate());
+
+	factory.registerDelegate(&QtnPropertyUInt64Base::staticMetaObject,
+		&qtnCreateDelegate<
+			QtnPropertyDelegateOpacityBox<QtnPropertyUInt64Base>,
+			QtnPropertyUInt64Base>,
+		qtnOpacityBoxDelegate());
 }
 
 quint64 QtnPropertyDelegateUInt64::minValue() const

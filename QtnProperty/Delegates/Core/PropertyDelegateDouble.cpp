@@ -19,6 +19,7 @@ limitations under the License.
 #include "QtnProperty/Delegates/Utils/PropertyEditorAux.h"
 #include "QtnProperty/Delegates/Utils/PropertyEditorHandler.h"
 #include "QtnProperty/Delegates/Utils/PropertyDelegateSliderBox.h"
+#include "QtnProperty/Delegates/Utils/PropertyDelegateOpacityBox.h"
 #include "QtnProperty/Delegates/PropertyDelegateFactory.h"
 #include "QtnProperty/Utils/DoubleSpinBox.h"
 #include "QtnProperty/MultiProperty.h"
@@ -61,6 +62,12 @@ void QtnPropertyDelegateDouble::Register(QtnPropertyDelegateFactory &factory)
 			QtnPropertyDelegateSlideBoxTyped<QtnPropertyDoubleBase>,
 			QtnPropertyDoubleBase>,
 		qtnSliderBoxDelegate());
+
+	factory.registerDelegate(&QtnPropertyDoubleBase::staticMetaObject,
+		&qtnCreateDelegate<
+			QtnPropertyDelegateOpacityBox<QtnPropertyDoubleBase>,
+			QtnPropertyDoubleBase>,
+		qtnOpacityBoxDelegate());
 }
 
 double QtnPropertyDelegateDouble::stepValue() const

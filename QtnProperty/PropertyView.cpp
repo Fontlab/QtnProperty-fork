@@ -384,7 +384,8 @@ void QtnPropertyView::drawItem(
 	bool isActive = (m_activeProperty == vItem.item->property);
 
 	QtnDrawContext drawContext{ &painter, this, rect, margins, splitPosition(),
-		isActive, vItem.hasChildren };
+		isActive, vItem.hasChildren, m_isDarkMode };
+	drawContext.colorCallback = m_colorCallback;
 
 	// create sub-items if not initialized
 	if (!vItem.subItemsValid)

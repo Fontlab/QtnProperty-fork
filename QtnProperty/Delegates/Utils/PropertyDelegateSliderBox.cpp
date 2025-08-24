@@ -55,6 +55,11 @@ QByteArray qtnToolTipAttr()
 	return QByteArrayLiteral("toolTip");
 }
 
+QByteArray qtnDrawTextAttr()
+{
+	return QByteArrayLiteral("drawText");
+}
+
 QtnPropertyDelegateSlideBox::QtnPropertyDelegateSlideBox(QtnPropertyBase &owner)
 	: QtnPropertyDelegateWithValue(owner)
 	, m_liveUpdate(false)
@@ -65,6 +70,7 @@ QtnPropertyDelegateSlideBox::QtnPropertyDelegateSlideBox(QtnPropertyBase &owner)
 	, m_multiplier(1.0)
 	, m_boxFillColor(QColor::fromRgb(200, 200, 255))
 	, m_itemToolTip(QtnPropertyView::tr("Drag/Scroll mouse to change value"))
+	, m_drawText(true)
 	, m_dragValuePart(0.0)
 	, m_oldValuePart(0.0)
 	, m_animateWidget(nullptr)
@@ -85,6 +91,7 @@ void QtnPropertyDelegateSlideBox::applyAttributesImpl(
 	info.loadAttribute(qtnUpdateByScrollAttr(), m_updateByScroll);
 	info.loadAttribute(qtnAnimateAttr(), m_animate);
 	info.loadAttribute(qtnToolTipAttr(), m_itemToolTip);
+	info.loadAttribute(qtnDrawTextAttr(), m_drawText);
 	info.loadAttribute(qtnSuffixAttr(), m_suffix);
 	info.loadAttribute(qtnPrecisionAttr(), m_precision);
 	info.loadAttribute(qtnMultiplierAttr(), m_multiplier);
@@ -131,8 +138,8 @@ void QtnPropertyDelegateSlideBox::draw(
 	double valuePart = m_dragValuePart =
 		(item.state() == QtnSubItemStatePushed ||
 			(m_animate && m_animation->state() == QVariantAnimation::Running))
-		? dragValuePart()
-		: propertyValuePart();
+			? dragValuePart()
+			: propertyValuePart();
 	if (valuePart < 0.0)
 		return;
 
@@ -148,7 +155,7 @@ void QtnPropertyDelegateSlideBox::draw(
 
 	auto palette = painter.style()->standardPalette();
 	auto colorGroup = stateProperty()->isEditableByUser() ? QPalette::Active
-														  : QPalette::Disabled;
+															  : QPalette::Disabled;
 
 	painter.fillRect(boxRect, palette.color(colorGroup, QPalette::Background));
 	painter.fillRect(valueRect, m_boxFillColor);
@@ -160,8 +167,9 @@ void QtnPropertyDelegateSlideBox::draw(
 
 	painter.restore();
 
-	qtnDrawValueText(
-		valuePartToStr(valuePart), painter, boxRect, context.style());
+	if (m_drawText)
+		qtnDrawValueText(
+			valuePartToStr(valuePart), painter, boxRect, context.style());
 }
 
 bool QtnPropertyDelegateSlideBox::event(

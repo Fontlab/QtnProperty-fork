@@ -238,7 +238,7 @@ void QtnPropertyDelegateWithValues::addSubItemName(
       const int iconHeight = 16;
       QRect iconRect(textRect.left(), textRect.top() + (h - iconHeight) / 2, iconHeight, iconHeight);
       icon.paint(context.painter, iconRect);
-			textRect.setLeft(textRect.left() + iconHeight + 4);
+			textRect.setLeft(textRect.left() + iconHeight + 6);
 		}
 
 		context.painter->drawText(textRect,

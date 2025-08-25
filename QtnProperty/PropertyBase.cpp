@@ -154,6 +154,9 @@ void qtnScriptRegisterPropertyTypes(QScriptEngine *engine)
 	obj.setProperty("QtnPropertyChangeReasonDescription",
 		QtnPropertyChangeReasonDescription,
 		QScriptValue::ReadOnly | QScriptValue::Undeletable);
+	obj.setProperty("QtnPropertyChangeReasonHelp",
+		QtnPropertyChangeReasonHelp,
+		QScriptValue::ReadOnly | QScriptValue::Undeletable);
 	obj.setProperty("QtnPropertyChangeReasonId", QtnPropertyChangeReasonId,
 		QScriptValue::ReadOnly | QScriptValue::Undeletable);
 	obj.setProperty("QtnPropertyChangeReasonStateLocal",
@@ -282,6 +285,19 @@ void QtnPropertyBase::setDescription(const QString &description)
 	m_description = description;
 
 	emit propertyDidChange(QtnPropertyChangeReasonDescription);
+}
+
+void QtnPropertyBase::setHelp(const QString &help)
+{
+	if (m_help == help)
+		return;
+
+	emit propertyWillChange(QtnPropertyChangeReasonHelp,
+		QtnPropertyValuePtr(&help), qMetaTypeId<QString>());
+
+	m_help = help;
+
+	emit propertyDidChange(QtnPropertyChangeReasonHelp);
 }
 
 void QtnPropertyBase::setIcon(const QIcon &icon)

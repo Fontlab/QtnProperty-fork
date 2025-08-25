@@ -25,6 +25,12 @@ limitations under the License.
 #include <QScrollBar>
 #include <QHelpEvent>
 #include <QToolTip>
+#include <QStatusTipEvent>
+#include <functional>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QCryptographicHash>
 
 struct QtnPropertyView::Item
 {
@@ -35,6 +41,7 @@ struct QtnPropertyView::Item
 	Item *parent;
 	std::vector<std::unique_ptr<Item>> children;
 	QtnConnections connections;
+	bool wasCollapsed;
 
 	Item();
 
@@ -87,6 +94,7 @@ QtnPropertyView::QtnPropertyView(QWidget *parent, QtnPropertySet *propertySet)
 
 	setFocusPolicy(Qt::StrongFocus);
 	viewport()->setMouseTracking(true);
+	m_hoveredProperty = nullptr;
 
 	updateStyleStuff();
 
@@ -322,7 +330,13 @@ void QtnPropertyView::connectPropertyToEdit(
 void QtnPropertyView::paintEvent(QPaintEvent *e)
 {
 	Q_UNUSED(e);
-
+  
+  QStylePainter painter(viewport());
+  
+  if (m_propertySetBackdroundColor.isValid())
+    painter.fillRect(rect(), m_propertySetBackdroundColor);
+    
+  
 	validateVisibleItems();
 
 	if (m_visibleItems.isEmpty())
@@ -344,8 +358,6 @@ void QtnPropertyView::paintEvent(QPaintEvent *e)
 		firstVisibleItemIndex * m_itemHeight - verticalScrollBar()->value());
 	itemRect.setBottom(itemRect.top() + m_itemHeight);
 
-	QStylePainter painter(viewport());
-
 	QPen splitterPen;
 	splitterPen.setColor(this->palette().color(QPalette::Mid));
 	splitterPen.setStyle(Qt::DotLine);
@@ -354,7 +366,7 @@ void QtnPropertyView::paintEvent(QPaintEvent *e)
 	{
 		const VisibleItem &vItem = m_visibleItems[i];
 		
-		if (i & 1)
+		if (m_alternatingRowColors && (i & 1))
 			painter.fillRect(itemRect, m_propertyAlternativeBackgroundColor);
 		
 		drawItem(painter, itemRect, vItem);
@@ -440,6 +452,14 @@ int QtnPropertyView::visibleItemIndexByProperty(
 			return i;
 
 	return -1;
+}
+
+QRect QtnPropertyView::itemRect(const QtnPropertyBase *property) const
+{
+    int index = visibleItemIndexByProperty(property);
+    if (index < 0)
+        return QRect();
+    return visibleItemRect(index);
 }
 
 QRect QtnPropertyView::visibleItemRect(int index) const
@@ -610,6 +630,9 @@ void QtnPropertyView::mouseMoveEvent(QMouseEvent *e)
 			m_mouseAtSplitter = false;
 			unsetCursor();
 		}
+
+		// emit status tip when hovered property changes
+		updateHoveredStatusTip(getPropertyAt(e->pos()));
 	}
 	QAbstractScrollArea::mouseMoveEvent(e);
 }
@@ -640,6 +663,10 @@ bool QtnPropertyView::viewportEvent(QEvent *e)
 
 		case QEvent::Leave:
 			deactivateSubItems();
+			if (m_hoveredProperty)
+			{
+				updateHoveredStatusTip(nullptr);
+			}
 			break;
 
 		default:; // do nothing
@@ -838,6 +865,40 @@ void QtnPropertyView::tooltipEvent(QHelpEvent *e)
 	}
 }
 
+QString QtnPropertyView::buildStatusTip(const QtnPropertyBase *property)
+{
+	if (!property)
+		return QString();
+
+	QString tip = property->help();
+	if (tip.isEmpty())
+		tip = property->description();
+
+	// StatusTip should be one-line; replace newlines with spaces
+	tip.replace('\n', ' ');
+	tip.replace('\r', ' ');
+	return tip;
+}
+
+void QtnPropertyView::updateHoveredStatusTip(QtnPropertyBase *hovered)
+{
+	if (hovered == m_hoveredProperty)
+		return;
+
+	m_hoveredProperty = hovered;
+	const QString tip = buildStatusTip(hovered);
+	if (tip == m_lastStatusTip)
+		return;
+
+	m_lastStatusTip = tip;
+	QStatusTipEvent ev(tip);
+	// Prefer sending to the top-level window; fallback to this widget
+	// QWidget *target = window();
+	// if (!target)
+	// 	target = this;
+	QCoreApplication::sendEvent(this, &ev);
+}
+
 bool QtnPropertyView::handleEvent(
 	QtnEventContext &context, VisibleItem &vItem, QPoint mousePos)
 {
@@ -895,6 +956,7 @@ QtnPropertyView::Item::Item()
 	: property(nullptr)
 	, level(0)
 	, parent(nullptr)
+	, wasCollapsed(false)
 {
 }
 
@@ -1070,8 +1132,6 @@ void QtnPropertyView::updateStyleStuff()
 	QFontMetrics fm(font());
 	m_itemHeight = fm.height() + m_itemHeightSpacing;
 
-	m_propertySetBackdroundColor = m_linesColor =
-		palette().color(QPalette::Button);
 	m_propertyAlternativeBackgroundColor = palette().color(QPalette::AlternateBase); 
 	
 	m_valueLeftMargin = m_customLeadMargin_set ? m_customLeadMargin : style()->pixelMetric(QStyle::PM_ButtonMargin);
@@ -1177,6 +1237,17 @@ void QtnPropertyView::onPropertyDidChange(
 		updateWithReason(reason);
 	}
 
+	if ((reason & QtnPropertyChangeReasonState) && item && !m_restoringBranchState)
+	{
+		bool collapsedNow = item->property->isCollapsed();
+		bool hasChildren = !item->children.empty();
+		if (hasChildren && collapsedNow != item->wasCollapsed)
+		{
+			item->wasCollapsed = collapsedNow;
+			emit branchExpandedStateChanged(item->property, collapsedNow);
+		}
+	}
+
 	emit propertiesChanged(reason);
 }
 
@@ -1208,6 +1279,7 @@ void QtnPropertyView::setupItemDelegate(Item *item)
 
 	item->delegate.reset(delegate);
 	item->children.clear();
+	item->wasCollapsed = item->property->isCollapsed();
 
 	// apply attributes
 	auto delegateInfo = property->delegateInfo();
@@ -1266,4 +1338,136 @@ QtnPainterState::QtnPainterState(QPainter &p)
 QtnPainterState::~QtnPainterState()
 {
 	m_p.restore();
+}
+
+QByteArray QtnPropertyView::saveBranchState() const
+{
+	std::function<void(const Item *, QStringList &, const QString &)> collectAllPaths;
+	collectAllPaths = [&](const Item *item, QStringList &paths, const QString &prefix)
+	{
+		if (!item || !item->property)
+			return;
+		const QString name = item->property->name();
+		const QString path = prefix.isEmpty() ? name : (prefix + QLatin1Char('.') + name);
+		paths.push_back(path);
+		for (const auto &child : item->children)
+		{
+			collectAllPaths(child.get(), paths, path);
+		}
+	};
+
+	std::function<void(const Item *, QJsonArray &, const QString &)> collectBranchStates;
+	collectBranchStates = [&](const Item *item, QJsonArray &outArray, const QString &prefix)
+	{
+		if (!item || !item->property)
+			return;
+		const QString name = item->property->name();
+		const QString path = prefix.isEmpty() ? name : (prefix + QLatin1Char('.') + name);
+		if (!item->children.empty())
+		{
+			QJsonObject rec;
+			rec.insert(QStringLiteral("path"), path);
+			rec.insert(QStringLiteral("collapsed"), item->property->isCollapsed());
+			outArray.append(rec);
+		}
+		for (const auto &child : item->children)
+		{
+			collectBranchStates(child.get(), outArray, path);
+		}
+	};
+
+	QJsonObject root;
+	root.insert(QStringLiteral("version"), 1);
+	// compute structure signature
+	QStringList allPaths;
+	collectAllPaths(m_itemsTree.get(), allPaths, QString());
+	allPaths.sort(Qt::CaseSensitive);
+	QByteArray joined = allPaths.join(QLatin1Char('\n')).toUtf8();
+	QByteArray hash = QCryptographicHash::hash(joined, QCryptographicHash::Sha1).toHex();
+	root.insert(QStringLiteral("structureHash"), QString::fromLatin1(hash));
+
+	QJsonArray branches;
+	collectBranchStates(m_itemsTree.get(), branches, QString());
+	root.insert(QStringLiteral("branches"), branches);
+
+	QJsonDocument doc(root);
+	return doc.toJson(QJsonDocument::Compact);
+}
+
+bool QtnPropertyView::restoreBranchState(const QByteArray &data)
+{
+	QJsonParseError err;
+	QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+	if (err.error != QJsonParseError::NoError || !doc.isObject())
+		return false;
+	const QJsonObject root = doc.object();
+	const int version = root.value(QStringLiteral("version")).toInt(0);
+	if (version != 1)
+		return false;
+
+	// verify structure
+	QStringList allPathsNow;
+	std::function<void(const Item *, QStringList &, const QString &)> collectAllPaths;
+	collectAllPaths = [&](const Item *item, QStringList &paths, const QString &prefix)
+	{
+		if (!item || !item->property)
+			return;
+		const QString name = item->property->name();
+		const QString path = prefix.isEmpty() ? name : (prefix + QLatin1Char('.') + name);
+		paths.push_back(path);
+		for (const auto &child : item->children)
+		{
+			collectAllPaths(child.get(), paths, path);
+		}
+	};
+	collectAllPaths(m_itemsTree.get(), allPathsNow, QString());
+	allPathsNow.sort(Qt::CaseSensitive);
+	QByteArray joinedNow = allPathsNow.join(QLatin1Char('\n')).toUtf8();
+	QByteArray hashNow = QCryptographicHash::hash(joinedNow, QCryptographicHash::Sha1).toHex();
+	const QString structureHashSaved = root.value(QStringLiteral("structureHash")).toString();
+	if (structureHashSaved.isEmpty() || structureHashSaved != QString::fromLatin1(hashNow))
+		return false;
+
+	const QJsonValue branchesVal = root.value(QStringLiteral("branches"));
+	if (!branchesVal.isArray())
+		return false;
+
+	QHash<QString, Item *> pathToItem;
+	std::function<void(Item *, const QString &)> buildMap;
+	buildMap = [&](Item *item, const QString &prefix)
+	{
+		if (!item || !item->property)
+			return;
+		const QString name = item->property->name();
+		const QString path = prefix.isEmpty() ? name : (prefix + QLatin1Char('.') + name);
+		pathToItem.insert(path, item);
+		for (auto &child : item->children)
+		{
+			buildMap(child.get(), path);
+		}
+	};
+	buildMap(m_itemsTree.get(), QString());
+
+	m_restoringBranchState = true;
+	{
+		const QJsonArray branches = branchesVal.toArray();
+		for (const QJsonValue &v : branches)
+		{
+			const QJsonObject rec = v.toObject();
+			const QString path = rec.value(QStringLiteral("path")).toString();
+			const bool collapsed = rec.value(QStringLiteral("collapsed")).toBool(false);
+			Item *item = pathToItem.value(path, nullptr);
+			if (!item)
+				continue;
+			if (item->children.empty())
+				continue; // only branches
+			if (collapsed)
+				item->property->addState(QtnPropertyStateCollapsed);
+			else
+				item->property->removeState(QtnPropertyStateCollapsed);
+			item->wasCollapsed = collapsed;
+		}
+	}
+	m_restoringBranchState = false;
+	return true;
 }

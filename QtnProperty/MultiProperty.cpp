@@ -532,6 +532,7 @@ void QtnMultiPropertyDelegate::applyAttributesImpl(
 					multiSet->setName(subSet->name());
 					multiSet->setDisplayName(subSet->displayName());
 					multiSet->setDescription(subSet->description());
+					multiSet->setHelp(subSet->help());
 					multiSet->setId(subSet->id());
 					multiSet->setState(subSet->stateLocal());
 
@@ -553,6 +554,7 @@ void QtnMultiPropertyDelegate::applyAttributesImpl(
 					multiProperty->setName(property->name());
 					multiProperty->setDisplayName(property->displayName());
 					multiProperty->setDescription(property->description());
+					multiProperty->setHelp(property->help());
 					multiProperty->setId(property->id());
 
 					addSubProperty(multiProperty);
@@ -658,6 +660,7 @@ void qtnPropertiesToMultiSet(
 				multiSet->setName(subSet->name());
 				multiSet->setDisplayName(subSet->displayName());
 				multiSet->setDescription(subSet->description());
+				multiSet->setHelp(subSet->help());
 				multiSet->setId(subSet->id());
 				multiSet->setState(subSet->stateLocal());
 
@@ -678,6 +681,7 @@ void qtnPropertiesToMultiSet(
 				multiProperty->setName(property->name());
 				multiProperty->setDisplayName(property->displayName());
 				multiProperty->setDescription(property->description());
+				multiProperty->setHelp(property->help());
 				multiProperty->setId(property->id());
 
 				target->addChildProperty(multiProperty, true);

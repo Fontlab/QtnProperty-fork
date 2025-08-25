@@ -23,6 +23,8 @@ limitations under the License.
 #include "QtnProperty/Utils/InplaceEditing.h"
 
 #include <QColorDialog>
+#include <QPainterPath>
+#include <QApplication>
 
 QByteArray qtnShapeAttr()
 {
@@ -199,8 +201,27 @@ void QtnPropertyDelegateQColorSolid::drawValueImpl(
 	}
 
 	auto boxRect = rect;
+  boxRect.setWidth(40);
 	boxRect.adjust(2, 2, -2, -2);
-	painter.fillRect(boxRect, owner());
+  
+  
+  painter.save();
+  
+  QPainterPath clip_path;
+  clip_path.addRoundedRect(boxRect, 3, 3);
+  painter.setClipPath(clip_path);
+  
+  painter.fillRect(boxRect, owner());
+  painter.setClipping(false);
+  
+  QStyleOptionFrame option;
+  
+  option.rect = boxRect;
+//  option.palette.setCurrentColorGroup(w->isEnabled() ? QPalette::Active : QPalette::Disabled);
+  
+  dynamic_cast<QApplication*>(qApp)->style()->drawPrimitive(QStyle::PE_FrameLineEdit, &option, &painter, nullptr);
+  
+  painter.restore();  
 }
 
 QWidget *QtnPropertyDelegateQColorSolid::createValueEditorImpl(

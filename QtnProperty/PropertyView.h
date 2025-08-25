@@ -60,6 +60,8 @@ public:
 	QtnPropertyBase *getPropertyParent(const QtnPropertyBase *property) const;
 	inline QtnPropertyBase *activeProperty();
 	inline const QtnPropertyBase *activeProperty() const;
+	inline QtnPropertyBase *hoveredProperty();
+	inline const QtnPropertyBase *hoveredProperty() const;
 	bool setActiveProperty(
 		QtnPropertyBase *newActiveProperty, bool ensureVisible = false);
 	bool setActiveProperty(int index, bool ensureVisible = false);
@@ -75,6 +77,10 @@ public:
 	void setPropertyViewStyle(QtnPropertyViewStyle style);
 	void addPropertyViewStyle(QtnPropertyViewStyle style);
 	void removePropertyViewStyle(QtnPropertyViewStyle style);
+
+	// Save/restore expanded/collapsed branches state
+	QByteArray saveBranchState() const;
+	bool restoreBranchState(const QByteArray &data);
 
 	QtnPropertyBase *getPropertyAt(
 		const QPoint &position, QRect *out_rect = nullptr);
@@ -93,16 +99,30 @@ public:
   
   int visibleItemIndexByProperty(const QtnPropertyBase *property) const;
   QRect visibleItemRect(int index) const;
+  QRect itemRect(const QtnPropertyBase *property) const;
   QRect propertyActionRect(QtnPropertyBase *property, int actionIndex);
   
   // Dark mode support
   bool isDarkMode() const { return m_isDarkMode; }
   void setDarkMode(bool v) { if (m_isDarkMode != v) { m_isDarkMode = v; viewport()->update(); } }
   
+  // Alternating row colors (on by default)
+  bool alternatingRowColors() const { return m_alternatingRowColors; }
+  void setAlternatingRowColors(bool v) { if (m_alternatingRowColors != v) { m_alternatingRowColors = v; viewport()->update(); } }
+  
   // Color callback support for delegates
   using ColorCallback = std::function<QColor(const QPoint &, const QColor &, const QString &)>;
   void setColorCallback(const ColorCallback &cb) { m_colorCallback = cb; }
   ColorCallback colorCallback() const { return m_colorCallback; }
+  
+  void setBackgroundColor(const QColor &c)
+  {
+    if (c != m_propertySetBackdroundColor)
+    {
+      m_propertySetBackdroundColor = c;
+      viewport()->update();
+    }
+  }
 
 public slots:
 	QtnAccessibilityProxy *accessibilityProxy();
@@ -118,6 +138,9 @@ signals:
 
 	void beforePropertyLockToggled(QtnPropertyBase *property);
 	void propertyLockToggled(QtnPropertyBase *property);
+
+	// emits when any branch (an item with children) changes its expand/collapse state
+	void branchExpandedStateChanged(QtnPropertyBase *property, bool collapsed);
 
 private:
 	void onActivePropertyDestroyed();
@@ -137,6 +160,8 @@ protected:
 	void keyPressEvent(QKeyEvent *e) override;
 	void wheelEvent(QWheelEvent *e) override;
 	void tooltipEvent(QHelpEvent *e);
+	void updateHoveredStatusTip(QtnPropertyBase *hovered);
+	static QString buildStatusTip(const QtnPropertyBase *property);
 
 private:
 	struct Item;
@@ -189,6 +214,8 @@ private:
 private:
 	QtnPropertySet *m_propertySet;
 	QtnPropertyBase *m_activeProperty;
+	QtnPropertyBase *m_hoveredProperty = nullptr;
+	QString m_lastStatusTip;
 
 	QtnPropertyDelegateFactory m_delegateFactory;
 
@@ -206,8 +233,8 @@ private:
 	bool m_customLeadMargin_set = false;
 	quint32 m_customLeadMargin = 0;
 	int m_valueLeftMargin;
-	QColor m_linesColor;
-	QColor m_propertySetBackdroundColor;
+  
+  QColor m_propertySetBackdroundColor;
 	QColor m_propertyAlternativeBackgroundColor;
 
 	float m_splitRatio;
@@ -217,7 +244,10 @@ private:
 	bool m_mouseAtSplitter;
 	bool m_mouseCaptured;
 	bool m_isDarkMode = false;
+	bool m_alternatingRowColors = true;
 	ColorCallback m_colorCallback;
+
+	bool m_restoringBranchState = false;
 
 	friend class QtnAccessibilityProxy;
 	QtnAccessibilityProxy *m_accessibilityProxy;
@@ -247,6 +277,16 @@ QtnPropertyBase *QtnPropertyView::activeProperty()
 const QtnPropertyBase *QtnPropertyView::activeProperty() const
 {
 	return m_activeProperty;
+}
+
+QtnPropertyBase *QtnPropertyView::hoveredProperty()
+{
+	return m_hoveredProperty;
+}
+
+const QtnPropertyBase *QtnPropertyView::hoveredProperty() const
+{
+	return m_hoveredProperty;
 }
 
 int QtnPropertyView::itemHeight() const

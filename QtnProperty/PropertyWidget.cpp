@@ -174,9 +174,12 @@ void QtnPropertyWidget::setActiveProperty(const QtnPropertyBase *activeProperty)
 			m_descriptionPanel->setText(QString());
 		} else
 		{
-			m_descriptionPanel->setText(QStringLiteral("<b>%1</b><br>%2")
+			m_descriptionPanel->setText(QStringLiteral("<b>%1</b><br>%2%3")
 											.arg(activeProperty->displayName(),
-												activeProperty->description()));
+												activeProperty->description(),
+												activeProperty->help().isEmpty()
+													? QString()
+													: QStringLiteral("<br>%1").arg(activeProperty->help())));
 		}
 	}
 }

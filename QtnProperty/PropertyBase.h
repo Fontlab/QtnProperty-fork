@@ -39,6 +39,7 @@ class QTN_IMPORT_EXPORT QtnPropertyBase : public QObject
 	Q_PROPERTY(QString name READ name)
 	Q_PROPERTY(QString displayName READ displayName)
 	Q_PROPERTY(QString description READ description)
+	Q_PROPERTY(QString help READ help)
 	Q_PROPERTY(qint32 id READ id)
 	Q_PROPERTY(bool isEditable READ isWritable)
 	Q_PROPERTY(bool isEditableByUser READ isEditableByUser)
@@ -67,6 +68,9 @@ public:
 
 	inline QString description() const;
 	void setDescription(const QString &description);
+
+	inline QString help() const;
+	void setHelp(const QString &help);
 
 	inline QIcon icon() const;
 	void setIcon(const QIcon &icon);
@@ -204,6 +208,7 @@ private:
 	QString m_description;
 	QIcon m_icon;
 	QtnPropertyID m_id;
+	QString m_help;
 
 	QtnPropertyState m_stateLocal;
 	QtnPropertyState m_stateInherited;
@@ -227,6 +232,11 @@ QString QtnPropertyBase::displayName() const
 QString QtnPropertyBase::description() const
 {
 	return m_description;
+}
+
+QString QtnPropertyBase::help() const
+{
+	return m_help;
 }
 
 QIcon QtnPropertyBase::icon() const

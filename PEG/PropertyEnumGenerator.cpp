@@ -104,7 +104,7 @@ static void assignmentSetCode(
 	if (!assignment.value().member.isEmpty())
 		name += assignment.value().member + ".";
 
-	if (assignment.key() != "description")
+	if (assignment.key() != "description" && assignment.key() != "help")
 	{
 		s.newLine() << QString("%1set%2(%3);")
 						   .arg(name, capitalize(assignment.key()),

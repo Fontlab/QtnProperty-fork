@@ -82,6 +82,10 @@ public:
 	QByteArray saveBranchState() const;
 	bool restoreBranchState(const QByteArray &data);
 
+	// Expand/collapse helpers
+	void setBranchCollapsedRecursively(QtnPropertyBase *property, bool collapsed);
+	void setAllBranchesCollapsed(bool collapsed);
+
 	QtnPropertyBase *getPropertyAt(
 		const QPoint &position, QRect *out_rect = nullptr);
 
@@ -110,6 +114,18 @@ public:
   bool alternatingRowColors() const { return m_alternatingRowColors; }
   void setAlternatingRowColors(bool v) { if (m_alternatingRowColors != v) { m_alternatingRowColors = v; viewport()->update(); } }
   
+  // Popup combobox item height (0 = default style)
+  int comboPopupItemHeight() const { return m_comboPopupItemHeight; }
+  void setComboPopupItemHeight(int px)
+  {
+    if (px < 0) px = 0;
+    if (m_comboPopupItemHeight != px)
+    {
+      m_comboPopupItemHeight = px;
+      if (viewport()) viewport()->setProperty("qtnComboPopupItemHeightPx", px);
+    }
+  }
+
   // Color callback support for delegates
   using ColorCallback = std::function<QColor(const QPoint &, const QColor &, const QString &)>;
   void setColorCallback(const ColorCallback &cb) { m_colorCallback = cb; }
@@ -243,9 +259,11 @@ private:
 	unsigned m_stopInvalidate;
 	bool m_mouseAtSplitter;
 	bool m_mouseCaptured;
+	bool m_pendingRowToggle = false;
 	bool m_isDarkMode = false;
 	bool m_alternatingRowColors = true;
 	ColorCallback m_colorCallback;
+	int m_comboPopupItemHeight = 0;
 
 	bool m_restoringBranchState = false;
 

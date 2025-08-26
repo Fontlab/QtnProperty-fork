@@ -22,6 +22,9 @@ limitations under the License.
 
 #include <QComboBox>
 #include <QLineEdit>
+#include <QListView>
+#include <QAbstractItemView>
+#include <QItemDelegate>
 
 class QtnPropertyEnumComboBoxHandler
 	: public QtnPropertyEditorHandlerVT<QtnPropertyEnumBase, QComboBox>
@@ -49,6 +52,24 @@ QtnPropertyDelegateEnum::QtnPropertyDelegateEnum(QtnPropertyEnumBase &owner)
 {
 }
 
+class QtnComboBoxDelegate : public QItemDelegate
+{
+public:
+	QtnComboBoxDelegate(int requiredHeight, QWidget *parent)
+		: QItemDelegate(parent), m_requiredHeight(requiredHeight)
+	{}
+
+	virtual QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override
+	{
+		QSize size = QItemDelegate::sizeHint(option, index);
+		size.setHeight(m_requiredHeight);
+		return size;
+	}
+
+private:
+	int m_requiredHeight;
+};
+
 QWidget *QtnPropertyDelegateEnum::createValueEditorImpl(
 	QWidget *parent, const QRect &rect, QtnInplaceInfo *inplaceInfo)
 {
@@ -58,6 +79,28 @@ QWidget *QtnPropertyDelegateEnum::createValueEditorImpl(
 		return 0;
 
 	QComboBox *combo = new QtnPropertyComboBox(this, parent);
+	// Apply popup item height from owning view if provided
+	int itemHeightPx = 0;
+	for (QWidget *w = parent; w; w = w->parentWidget())
+	{
+		// viewport carries the dynamic property; view may also expose it
+		QVariant v = w->property("qtnComboPopupItemHeightPx");
+		if (v.isValid()) { itemHeightPx = v.toInt(); break; }
+	}
+	if (itemHeightPx > 0)
+	{
+		QListView *lv = qobject_cast<QListView *>(combo->view());
+		if (!lv)
+		{
+			lv = new QListView(combo);
+			combo->setView(lv);
+		}
+
+		if (!lv->itemDelegate() || !dynamic_cast<QtnComboBoxDelegate *>(lv->itemDelegate()))
+		{
+			lv->setItemDelegate(new QtnComboBoxDelegate(itemHeightPx, combo));
+		}
+	}
 	info->forEachEnumValue([combo](const QtnEnumValueInfo &value) -> bool {
 		combo->addItem(value.displayName(), QVariant(value.value()));
 		return true;

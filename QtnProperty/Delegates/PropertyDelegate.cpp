@@ -21,6 +21,7 @@ limitations under the License.
 #include "PropertyView.h"
 
 #include <QPainterPath>
+#include <QMouseEvent>
 
 QtnPropertyDelegate::QtnPropertyDelegate(QtnPropertyBase &ownerProperty)
 	: m_ownerProperty(&ownerProperty)
@@ -274,7 +275,24 @@ void QtnPropertyDelegate::addSubItemBranchNode(
 		if ((context.eventType() == QEvent::MouseButtonPress) ||
 			(context.eventType() == QEvent::MouseButtonDblClick))
 		{
-			stateProperty()->toggleState(QtnPropertyStateCollapsed);
+			QMouseEvent *me = dynamic_cast<QMouseEvent *>(context.event);
+			Qt::KeyboardModifiers mods = me ? me->modifiers() : Qt::NoModifier;
+			const bool alt = mods.testFlag(Qt::AltModifier);
+			const bool ctrl = mods.testFlag(Qt::ControlModifier) || mods.testFlag(Qt::MetaModifier);
+			const bool currentlyCollapsed = stateProperty()->isCollapsed();
+			const bool targetCollapsed = !currentlyCollapsed;
+			if (alt && ctrl)
+			{
+				if (context.widget)
+					context.widget->setAllBranchesCollapsed(targetCollapsed);
+			} else if (alt)
+			{
+				if (context.widget)
+					context.widget->setBranchCollapsedRecursively(stateProperty(), targetCollapsed);
+			} else
+			{
+				stateProperty()->toggleState(QtnPropertyStateCollapsed);
+			}
 			return true;
 		}
 

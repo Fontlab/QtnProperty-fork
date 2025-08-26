@@ -20,6 +20,7 @@ limitations under the License.
 #include "Utils/InplaceEditing.h"
 #include "Utils/QtnConnections.h"
 #include "Delegates/Utils/PropertyDelegateMisc.h"
+#include "QtnProperty/Core/PropertyBool.h"
 
 #include <QApplication>
 #include <QScrollBar>
@@ -251,6 +252,26 @@ bool QtnPropertyView::ensureVisible(const QtnPropertyBase *property)
 		return false;
 
 	int index = visibleItemIndexByProperty(property);
+	if (index < 0)
+	{
+		// Expand ancestors so the property becomes visible
+		Item *item = findItem(m_itemsTree.get(), property);
+		if (!item)
+			return false;
+
+		m_restoringBranchState = true;
+		for (Item *p = item->parent; p; p = p->parent)
+		{
+			if (!p->children.empty() && p->property->isCollapsed())
+			{
+				p->property->setCollapsed(false);
+			}
+		}
+		m_restoringBranchState = false;
+
+		// Recompute index after expansion
+		index = visibleItemIndexByProperty(property);
+	}
 	return ensureVisibleItemByIndex(index);
 }
 
@@ -521,6 +542,7 @@ static const int TOLERANCE = 3;
 void QtnPropertyView::mousePressEvent(QMouseEvent *e)
 {
 	m_mouseCaptured = false;
+	m_pendingRowToggle = false;
 	if (e->button() == Qt::RightButton)
 	{
 		auto property = getPropertyAt(e->pos());
@@ -552,6 +574,13 @@ void QtnPropertyView::mousePressEvent(QMouseEvent *e)
 	{
 		if (index >= 0)
 		{
+			// If clicking the already-selected row, prepare to toggle on release
+			QtnPropertyBase *clickedProperty = m_visibleItems.at(index).item->property;
+			bool clickedIsActive = (clickedProperty == m_activeProperty);
+			if (clickedIsActive)
+			{
+				m_pendingRowToggle = true;
+			}
 			changeActivePropertyByIndex(index);
 			m_mouseCaptured = handleMouseEvent(index, e, e->pos());
 		}
@@ -576,6 +605,27 @@ void QtnPropertyView::mouseReleaseEvent(QMouseEvent *e)
 		updateSplitRatio((float) (e->x() - rect.left()) / (float) rect.width());
 	} else
 	{
+		if (m_pendingRowToggle)
+		{
+			// Toggle boolean value when clicking selected bool row
+			QtnPropertyBase *propUnderMouse = getPropertyAt(e->pos());
+			if (propUnderMouse == m_activeProperty && m_activeProperty)
+			{
+				if (auto *boolProp = qobject_cast<QtnPropertyBoolBase *>(m_activeProperty))
+				{
+					if (boolProp->isEditableByUser())
+					{
+						boolProp->setValue(!boolProp->value(), QtnPropertyChangeReasonEdit);
+					}
+				}
+			}
+			m_pendingRowToggle = false;
+			emit mouseReleased(e);
+			QAbstractScrollArea::mouseReleaseEvent(e);
+			m_mouseCaptured = false;
+			return;
+		}
+
 		handleMouseEvent(visibleItemIndexByPoint(e->pos()), e, e->pos());
 		emit mouseReleased(e);
 	}
@@ -1470,4 +1520,47 @@ bool QtnPropertyView::restoreBranchState(const QByteArray &data)
 	}
 	m_restoringBranchState = false;
 	return true;
+}
+
+void QtnPropertyView::setBranchCollapsedRecursively(
+    QtnPropertyBase *property, bool collapsed)
+{
+    if (!property)
+        return;
+
+    Item *start = findItem(m_itemsTree.get(), property);
+    if (!start)
+        return;
+
+    m_restoringBranchState = true;
+    std::function<void(Item *)> apply;
+    apply = [&](Item *item) {
+        if (!item)
+            return;
+        if (!item->children.empty())
+            item->property->setCollapsed(collapsed);
+        for (auto &ch : item->children)
+            apply(ch.get());
+    };
+    apply(start);
+    m_restoringBranchState = false;
+}
+
+void QtnPropertyView::setAllBranchesCollapsed(bool collapsed)
+{
+    if (!m_itemsTree)
+        return;
+
+    m_restoringBranchState = true;
+    std::function<void(Item *)> apply;
+    apply = [&](Item *item) {
+        if (!item)
+            return;
+        if (!item->children.empty())
+            item->property->setCollapsed(collapsed);
+        for (auto &ch : item->children)
+            apply(ch.get());
+    };
+    apply(m_itemsTree.get());
+    m_restoringBranchState = false;
 }

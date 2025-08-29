@@ -169,3 +169,28 @@ bool QtnEnumInfo::toStr(QString &str, QtnEnumValueType value) const
 {
 	return toStr(str, findByValue(value));
 }
+
+void QtnEnumInfo::setIconByValue(QtnEnumValueType value, const QIcon &icon)
+{
+	for (auto &v : m_values)
+	{
+		if (v.value() == value)
+		{
+			v.setIcon(icon);
+			break;
+		}
+	}
+}
+
+void QtnEnumInfo::setIconByName(const QString &name, const QIcon &icon,
+	Qt::CaseSensitivity cs)
+{
+	for (auto &v : m_values)
+	{
+		if (QString::compare(v.name(), name, cs) == 0)
+		{
+			v.setIcon(icon);
+			break;
+		}
+	}
+}

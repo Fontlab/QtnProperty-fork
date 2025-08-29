@@ -575,11 +575,15 @@ void QtnPropertyView::mousePressEvent(QMouseEvent *e)
 		if (index >= 0)
 		{
 			// If clicking the already-selected row, prepare to toggle on release
+			// Only for boolean properties; other types should open editors as usual
 			QtnPropertyBase *clickedProperty = m_visibleItems.at(index).item->property;
 			bool clickedIsActive = (clickedProperty == m_activeProperty);
 			if (clickedIsActive)
 			{
-				m_pendingRowToggle = true;
+				if (qobject_cast<QtnPropertyBoolBase *>(clickedProperty) != nullptr)
+				{
+					m_pendingRowToggle = true;
+				}
 			}
 			changeActivePropertyByIndex(index);
 			m_mouseCaptured = handleMouseEvent(index, e, e->pos());

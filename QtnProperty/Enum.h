@@ -22,6 +22,7 @@ limitations under the License.
 #include <QVector>
 #include <QSharedPointer>
 #include <QMetaEnum>
+#include <QIcon>
 
 typedef qint32 QtnEnumValueType;
 
@@ -54,11 +55,15 @@ public:
 	inline const QString &displayName() const;
 	inline QtnEnumValueState state() const;
 
+	inline const QIcon &icon() const;
+	inline void setIcon(const QIcon &icon);
+
 private:
 	QtnEnumValueType m_value;
 	QString m_name;
 	QString m_displayName;
 	QtnEnumValueState m_state;
+	QIcon m_icon;
 };
 
 QtnEnumValueType QtnEnumValueInfo::value() const
@@ -84,6 +89,16 @@ const QString &QtnEnumValueInfo::displayName() const
 QtnEnumValueState QtnEnumValueInfo::state() const
 {
 	return m_state;
+}
+
+const QIcon &QtnEnumValueInfo::icon() const
+{
+	return m_icon;
+}
+
+void QtnEnumValueInfo::setIcon(const QIcon &icon)
+{
+	m_icon = icon;
 }
 
 class QTN_IMPORT_EXPORT QtnEnumInfo
@@ -132,6 +147,11 @@ public:
 
 	inline QVector<QtnEnumValueInfo> &getVector();
 	inline const QVector<QtnEnumValueInfo> &getVector() const;
+
+    // convenience helpers to assign icons to enum items
+    void setIconByValue(QtnEnumValueType value, const QIcon &icon);
+    void setIconByName(const QString &name, const QIcon &icon,
+        Qt::CaseSensitivity cs = Qt::CaseSensitive);
 
 private:
 	Qt::CaseSensitivity m_case_sensitivity;

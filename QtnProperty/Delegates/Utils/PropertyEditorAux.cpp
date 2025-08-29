@@ -191,6 +191,10 @@ void QtnPropertyComboBox::paintEvent(QPaintEvent *event)
 	auto rect = event->rect();
 	QComboBox::paintEvent(event);
 
+	// guard against transient nullptr during delegate/editor teardown/rebuild
+	if (!m_delegate || !stateProperty())
+		return;
+
 	QPainter painter(this);
 	if (stateProperty()->isMultiValue())
 	{

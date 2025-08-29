@@ -15,6 +15,7 @@ limitations under the License.
 *******************************************************************************/
 
 #include "DoubleSpinBox.h"
+#include <QKeyEvent>
 
 QtnDoubleSpinBox::QtnDoubleSpinBox(QWidget *parent)
 	: QDoubleSpinBox(parent)
@@ -85,4 +86,31 @@ QString QtnDoubleSpinBox::valueToText(
 	}
 
 	return result;
+}
+
+void QtnDoubleSpinBox::keyPressEvent(QKeyEvent *event)
+{
+	if (event)
+	{
+		int key = event->key();
+		if (key == Qt::Key_Up || key == Qt::Key_Down)
+		{
+			double direction = (key == Qt::Key_Up) ? 1.0 : -1.0;
+			Qt::KeyboardModifiers mods = event->modifiers();
+			double step = 1.0;
+			if (mods & (Qt::ControlModifier | Qt::MetaModifier))
+				step = 100.0;
+			else if (mods & Qt::ShiftModifier)
+				step = 10.0;
+			else if (mods & Qt::AltModifier)
+				step = 0.1;
+
+			double newVal = qBound(minimum(), value() + direction * step, maximum());
+			setValue(newVal);
+
+			event->accept();
+			return;
+		}
+	}
+	QDoubleSpinBox::keyPressEvent(event);
 }

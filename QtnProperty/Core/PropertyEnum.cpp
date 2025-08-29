@@ -21,6 +21,8 @@ QtnPropertyEnumBase::QtnPropertyEnumBase(QObject *parent)
 	: QtnSinglePropertyBase<QtnEnumValueType>(parent)
 	, m_enumInfo(nullptr)
 {
+    QObject::connect(this, &QtnPropertyBase::propertyDidChange, this,
+        &QtnPropertyEnumBase::onSelfPropertyDidChange);
 }
 
 bool QtnPropertyEnumBase::fromStrImpl(
@@ -58,6 +60,28 @@ bool QtnPropertyEnumBase::isValueAcceptedImpl(ValueType valueToAccept)
 	return true;
 }
 
+void QtnPropertyEnumBase::updateIconFromValue()
+{
+	if (!m_enumInfo)
+		return;
+
+	const QtnEnumValueInfo *vinfo = m_enumInfo->findByValue(value());
+	if (!vinfo)
+		return;
+
+	const QIcon &icon = vinfo->icon();
+	if (!icon.isNull())
+		setIcon(icon);
+}
+
+void QtnPropertyEnumBase::onSelfPropertyDidChange(QtnPropertyChangeReason reason)
+{
+	if (reason & QtnPropertyChangeReasonValue)
+	{
+		updateIconFromValue();
+	}
+}
+
 QtnPropertyEnumCallback::QtnPropertyEnumCallback(QObject *parent)
 	: QtnSinglePropertyCallback<QtnPropertyEnumBase>(parent)
 {
@@ -66,4 +90,10 @@ QtnPropertyEnumCallback::QtnPropertyEnumCallback(QObject *parent)
 QtnPropertyEnum::QtnPropertyEnum(QObject *parent)
 	: QtnSinglePropertyValue<QtnPropertyEnumBase>(parent)
 {
+}
+
+void QtnPropertyEnum::setValueImpl(ValueType newValue, QtnPropertyChangeReason reason)
+{
+	QtnSinglePropertyValue<QtnPropertyEnumBase>::setValueImpl(newValue, reason);
+	updateIconFromValue();
 }

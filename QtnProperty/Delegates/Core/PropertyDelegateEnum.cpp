@@ -25,6 +25,7 @@ limitations under the License.
 #include <QListView>
 #include <QAbstractItemView>
 #include <QItemDelegate>
+#include <QStyle>
 
 class QtnPropertyEnumComboBoxHandler
 	: public QtnPropertyEditorHandlerVT<QtnPropertyEnumBase, QComboBox>
@@ -102,7 +103,10 @@ QWidget *QtnPropertyDelegateEnum::createValueEditorImpl(
 		}
 	}
 	info->forEachEnumValue([combo](const QtnEnumValueInfo &value) -> bool {
-		combo->addItem(value.displayName(), QVariant(value.value()));
+		if (!value.icon().isNull())
+			combo->addItem(value.icon(), value.displayName(), QVariant(value.value()));
+		else
+			combo->addItem(value.displayName(), QVariant(value.value()));
 		return true;
 	});
 
@@ -128,6 +132,8 @@ bool QtnPropertyDelegateEnum::propertyValueToStrImpl(QString &strValue) const
 	strValue = valueInfo->displayName();
 	return true;
 }
+
+// drawValueImpl is default; we no longer paint enum icons in the value cell.
 
 QtnPropertyEnumComboBoxHandler::QtnPropertyEnumComboBoxHandler(
 	QtnPropertyDelegate *delegate, QComboBox &editor)

@@ -58,6 +58,7 @@ SOURCES +=\
     $$PWD/Delegates/Utils/PropertyDelegateGeoPoint.cpp \
     $$PWD/Utils/AccessibilityProxy.cpp \
     $$PWD/Utils/DoubleSpinBox.cpp \
+    $$PWD/Utils/QtnSpinBox.cpp \
     $$PWD/Utils/MultilineTextDialog.cpp \
     $$PWD/PropertyInt64.cpp \
     $$PWD/PropertyUInt64.cpp \
@@ -147,6 +148,7 @@ HEADERS +=\
     $$PWD/Delegates/Utils/PropertyDelegateGeoPoint.h \
     $$PWD/Utils/AccessibilityProxy.h \
     $$PWD/Utils/DoubleSpinBox.h \
+    $$PWD/Utils/QtnSpinBox.h \
     $$PWD/Utils/MultilineTextDialog.h \
     $$PWD/PropertyInt64.h \
     $$PWD/PropertyUInt64.h \

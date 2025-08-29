@@ -19,6 +19,8 @@ limitations under the License.
 
 #include "QtnProperty/Config.h"
 
+class QKeyEvent;
+
 class QTN_IMPORT_EXPORT QtnDoubleSpinBox : public QDoubleSpinBox
 {
 public:
@@ -29,4 +31,6 @@ public:
 
 	static QString valueToText(double value, const QLocale &locale = QLocale(),
 		int decimals = 15, bool groupSeparatorShown = false);
+protected:
+	virtual void keyPressEvent(QKeyEvent *event) override;
 };

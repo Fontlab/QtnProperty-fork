@@ -36,6 +36,8 @@ public:
 
 	inline void setEnumInfo(const QtnEnumInfo *enumInfo);
 
+	inline void refreshIconFromValue();
+
 protected:
 	// string conversion implementation
 	bool fromStrImpl(
@@ -44,8 +46,13 @@ protected:
 
 	bool isValueAcceptedImpl(ValueType valueToAccept) override;
 
+	void updateIconFromValue();
+
 private:
 	const QtnEnumInfo *m_enumInfo;
+
+private slots:
+	void onSelfPropertyDidChange(QtnPropertyChangeReason reason);
 
 	P_PROPERTY_DECL_MEMBER_OPERATORS(QtnPropertyEnumBase)
 };
@@ -58,6 +65,12 @@ const QtnEnumInfo *QtnPropertyEnumBase::enumInfo() const
 void QtnPropertyEnumBase::setEnumInfo(const QtnEnumInfo *enumInfo)
 {
 	m_enumInfo = enumInfo;
+	updateIconFromValue();
+}
+
+void QtnPropertyEnumBase::refreshIconFromValue()
+{
+	updateIconFromValue();
 }
 
 P_PROPERTY_DECL_ALL_OPERATORS(QtnPropertyEnumBase, QtnEnumValueType)
@@ -87,6 +100,9 @@ public:
 	Q_INVOKABLE explicit QtnPropertyEnum(QObject *parent = nullptr);
 
 	P_PROPERTY_DECL_MEMBER_OPERATORS2(QtnPropertyEnum, QtnPropertyEnumBase)
+
+protected:
+	virtual void setValueImpl(ValueType newValue, QtnPropertyChangeReason reason) override;
 };
 
 #endif // PROPERTYENUM_H

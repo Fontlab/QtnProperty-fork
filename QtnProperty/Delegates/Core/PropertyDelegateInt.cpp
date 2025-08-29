@@ -26,6 +26,7 @@ limitations under the License.
 
 #include <QCoreApplication>
 #include <QSpinBox>
+#include "QtnProperty/Utils/QtnSpinBox.h"
 #include <QLocale>
 
 QByteArray qtnSpinBoxDelegate()
@@ -130,7 +131,7 @@ int QtnPropertyDelegateInt::currentValue() const
 QWidget *QtnPropertyDelegateInt::createValueEditorImpl(
 	QWidget *parent, const QRect &rect, QtnInplaceInfo *inplaceInfo)
 {
-	auto spinBox = new QSpinBox(parent);
+	auto spinBox = new QtnSpinBox(parent);
 	spinBox->setSuffix(m_suffix);
 	spinBox->setGeometry(rect);
 

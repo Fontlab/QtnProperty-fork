@@ -310,7 +310,7 @@ void QtnPropertyBase::setIcon(const QIcon &icon)
 
 	m_icon = icon;
 
-//	emit propertyDidChange(QtnPropertyChangeReasonUpdateDelegate);
+	postUpdateEvent(QtnPropertyChangeReasonUpdateDelegate);
 }
 
 void QtnPropertyBase::setId(QtnPropertyID id)

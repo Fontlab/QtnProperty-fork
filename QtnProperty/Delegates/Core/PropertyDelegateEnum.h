@@ -36,7 +36,7 @@ protected:
 		QtnInplaceInfo *inplaceInfo = nullptr) override;
 
 	virtual bool propertyValueToStrImpl(QString &strValue) const override;
-//	virtual void drawValueImpl(QStylePainter &painter, const QRect &rect) const override;
+	virtual void drawValueImpl(QStylePainter &painter, const QRect &rect) const override;
 };
 
 #endif // PROPERTY_DELEGATE_ENUM_H

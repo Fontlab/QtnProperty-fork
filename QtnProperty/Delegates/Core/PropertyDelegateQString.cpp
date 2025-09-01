@@ -121,6 +121,31 @@ QByteArray qtnAcceptModeAttr()
 	return QByteArrayLiteral("acceptMode");
 }
 
+QByteArray qtnFileButtonIconAttr()
+{
+	return QByteArrayLiteral("fileButtonIcon");
+}
+
+QByteArray qtnFileClearButtonAttr()
+{
+	return QByteArrayLiteral("clearButton");
+}
+
+QByteArray qtnFileClearButtonIconAttr()
+{
+	return QByteArrayLiteral("clearButtonIcon");
+}
+
+QByteArray qtnFileClearButtonTextAttr()
+{
+	return QByteArrayLiteral("clearButtonText");
+}
+
+QByteArray qtnFileClearButtonToolTipAttr()
+{
+	return QByteArrayLiteral("clearButtonToolTip");
+}
+
 QByteArray qtnGetCandidatesFnAttr()
 {
 	return QByteArrayLiteral("GetCandidatesFn");
@@ -303,6 +328,7 @@ private:
 	QFileDialog *dialog;
 	DialogContainerPtr dialogContainer;
 	QString defaultDirectory;
+	QString placeholder;
 };
 
 QtnPropertyDelegateQStringInvalidBase::QtnPropertyDelegateQStringInvalidBase(
@@ -316,6 +342,7 @@ QtnPropertyDelegateQStringInvalidBase::QtnPropertyDelegateQStringInvalidBase(
 void QtnPropertyDelegateQStringInvalidBase::applyAttributesImpl(
 	const QtnPropertyDelegateInfo &info)
 {
+	QtnPropertyDelegateQString::applyAttributesImpl(info);
 	info.loadAttribute(qtnInvalidColorAttr(), m_invalidColor);
 }
 
@@ -625,6 +652,61 @@ void QtnPropertyQStringFileLineEditBttnHandler::applyAttributes(
 
 	if (info.loadAttribute(qtnFileNameFiltersAttr(), list))
 		dialog->setNameFilters(list);
+
+	// Placeholder override
+	info.loadAttribute(qtnPlaceholderAttr(), placeholder);
+
+	// Custom icon for the browse tool button
+	QIcon browseIcon = info.getAttribute<QIcon>(qtnFileButtonIconAttr(), QIcon());
+	if (browseIcon.isNull())
+	{
+		const QString iconPath =
+			info.getAttribute<QString>(qtnFileButtonIconAttr(), QString());
+		if (!iconPath.isEmpty())
+			browseIcon = QIcon(iconPath);
+	}
+	if (!browseIcon.isNull())
+	{
+		editor().toolButton->setIcon(browseIcon);
+		editor().toolButton->setText(QString());
+	}
+
+	// Configure secondary clear button
+	bool enableClear = info.getAttribute<bool>(qtnFileClearButtonAttr(), false);
+	if (enableClear && editor().secondaryButton)
+	{
+		QToolButton *btn = editor().secondaryButton;
+		btn->setVisible(true);
+		// icon
+		QIcon clearIcon = info.getAttribute<QIcon>(qtnFileClearButtonIconAttr(), QIcon());
+		if (clearIcon.isNull())
+		{
+			const QString clearIconPath =
+				info.getAttribute<QString>(qtnFileClearButtonIconAttr(), QString());
+			if (!clearIconPath.isEmpty())
+				clearIcon = QIcon(clearIconPath);
+		}
+		if (!clearIcon.isNull())
+			btn->setIcon(clearIcon);
+		// text
+		const QString clearText =
+			info.getAttribute<QString>(qtnFileClearButtonTextAttr(), QString());
+		if (!clearText.isEmpty())
+			btn->setText(clearText);
+		else if (!btn->icon().isNull())
+			btn->setText(QString());
+		// tooltip
+		btn->setToolTip(
+			info.getAttribute<QString>(qtnFileClearButtonToolTipAttr(), QString()));
+
+		QObject::connect(btn, &QToolButton::clicked, &editor(), [this]() {
+			if (stateProperty()->isEditableByUser())
+			{
+				property().setValue(QString(), delegate()->editReason());
+				updateEditor();
+			}
+		});
+	}
 }
 
 void QtnPropertyQStringFileLineEditBttnHandler::onToolButtonClick()
@@ -644,8 +726,14 @@ void QtnPropertyQStringFileLineEditBttnHandler::updateEditor()
 	if (!stateProperty()->isMultiValue())
 	{
 		auto edit = editor().lineEdit;
-		edit->setPlaceholderText(
-			QtnPropertyQString::getPlaceholderStr(edit->text(), false));
+		if (edit->text().isEmpty() && !placeholder.isEmpty())
+		{
+			edit->setPlaceholderText(placeholder);
+		} else
+		{
+			edit->setPlaceholderText(
+				QtnPropertyQString::getPlaceholderStr(edit->text(), false));
+		}
 
 		edit->selectAll();
 	}

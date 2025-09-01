@@ -32,7 +32,7 @@ QtnLineEditBttn::QtnLineEditBttn(
 {
 	QHBoxLayout *layout = new QHBoxLayout(this);
 	layout->setMargin(0);
-	layout->setSpacing(0);
+	layout->setSpacing(4);
 
 	if (!lineEdit)
 		lineEdit = new QLineEdit(this);
@@ -43,8 +43,19 @@ QtnLineEditBttn::QtnLineEditBttn(
 
 	toolButton = new QToolButton(this);
 	toolButton->setText(bttnText);
+  if (bttnText == "...")
+  {
+    toolButton->setFixedSize(24, 22);
+  }
+  
 	toolButton->setFocusPolicy(Qt::StrongFocus);
 	layout->addWidget(toolButton);
+
+	secondaryButton = new QToolButton(this);
+	secondaryButton->setVisible(false);
+	secondaryButton->setFocusPolicy(Qt::StrongFocus);
+  secondaryButton->setFixedSize(24, 22);
+	layout->addWidget(secondaryButton);
 
 	setFocusProxy(lineEdit);
 	setAutoFillBackground(true);

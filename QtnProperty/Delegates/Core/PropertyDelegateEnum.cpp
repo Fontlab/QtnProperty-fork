@@ -133,7 +133,51 @@ bool QtnPropertyDelegateEnum::propertyValueToStrImpl(QString &strValue) const
 	return true;
 }
 
-// drawValueImpl is default; we no longer paint enum icons in the value cell.
+void QtnPropertyDelegateEnum::drawValueImpl(QStylePainter &painter, const QRect &rect) const
+{
+	// draw the value text with the default logic first
+	QtnPropertyDelegateWithValueEditor::drawValueImpl(painter, rect);
+
+	// do not draw underline for multi-value placeholder
+	if (stateProperty()->isMultiValue())
+		return;
+
+	QString strValue;
+	if (!propertyValueToStrImpl(strValue) || strValue.isEmpty())
+		return;
+
+	QRect textRect = rect;
+	if (auto style = painter.style())
+	{
+		textRect.adjust(style->pixelMetric(QStyle::PM_ButtonMargin), 0, 0, 0);
+	}
+
+	const QFontMetrics &fm = painter.fontMetrics();
+	const QString elided = qtnElidedText(painter, strValue, textRect, nullptr);
+	if (elided.isEmpty())
+		return;
+
+	int textWidth = fm.width(elided);
+	int x1 = textRect.left();
+	int x2 = x1 + textWidth;
+	if (x2 > textRect.right())
+		x2 = textRect.right();
+	if (x2 <= x1)
+		return;
+
+	int top = textRect.top() + (textRect.height() - fm.height()) / 2;
+	int baseline = top + fm.ascent();
+	int underlineY = baseline + fm.underlinePos();
+
+	QPen oldPen = painter.pen();
+	QPen pen = oldPen;
+	QColor c = pen.color();
+	c.setAlphaF(c.alphaF() * 0.5);
+	pen.setColor(c);
+	painter.setPen(pen);
+	painter.drawLine(x1, underlineY, x2, underlineY);
+	painter.setPen(oldPen);
+}
 
 QtnPropertyEnumComboBoxHandler::QtnPropertyEnumComboBoxHandler(
 	QtnPropertyDelegate *delegate, QComboBox &editor)

@@ -191,6 +191,7 @@ bool QtnPropertyDelegateQColorSolid::createSubItemValueImpl(
 	return true;
 }
 
+
 void QtnPropertyDelegateQColorSolid::drawValueImpl(
 	QStylePainter &painter, const QRect &rect) const
 {
@@ -200,10 +201,10 @@ void QtnPropertyDelegateQColorSolid::drawValueImpl(
 		return;
 	}
 
-	auto boxRect = rect;
-  boxRect.setWidth(40);
-	boxRect.adjust(2, 2, -2, -2);
-  
+	const int blockHeight = 20;
+	const int blockWidth = 40;
+	int y = (rect.height() - blockHeight) / 2;
+	QRect boxRect(rect.left() + 2, rect.top() + y, blockWidth, blockHeight);
   
   painter.save();
   
@@ -220,6 +221,20 @@ void QtnPropertyDelegateQColorSolid::drawValueImpl(
 //  option.palette.setCurrentColorGroup(w->isEnabled() ? QPalette::Active : QPalette::Disabled);
   
   dynamic_cast<QApplication*>(qApp)->style()->drawPrimitive(QStyle::PE_FrameLineEdit, &option, &painter, nullptr);
+  
+  QPointF pt(boxRect.right() + 8, QRectF(boxRect).center().y());  
+  QPolygonF poly;
+  poly.reserve(3);
+  poly << pt + QPointF(-2.5, -0.5)
+       << pt + QPointF(0, 2.5)
+       << pt + QPointF(2.5, -0.5);
+  
+  QPalette pal = qApp->palette();
+  QColor arrowColor = pal.color(QPalette::Text);
+  arrowColor.setAlpha(100);
+  
+  painter.setPen(QPen(arrowColor, 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+  painter.drawPolyline(poly);
   
   painter.restore();  
 }

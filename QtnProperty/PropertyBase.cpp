@@ -961,6 +961,7 @@ void QtnPropertyBase::setDelegateAttribute(
 	auto delegate = m_delegateInfoGetter->delegateInfo();
 	Q_ASSERT(delegate);
 	delegate->attributes[attributeName] = attributeValue;
+	postUpdateEvent(QtnPropertyChangeReasonUpdateDelegate);
 }
 
 QtnPropertyDelegateInfoGetterValue::QtnPropertyDelegateInfoGetterValue(

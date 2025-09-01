@@ -22,6 +22,7 @@ limitations under the License.
 
 #include <QPainterPath>
 #include <QMouseEvent>
+#include <QApplication>
 
 QtnPropertyDelegate::QtnPropertyDelegate(QtnPropertyBase &ownerProperty)
 	: m_ownerProperty(&ownerProperty)
@@ -193,12 +194,16 @@ void QtnPropertyDelegate::addSubItemLock(
 
 QColor QtnPropertyDelegate::disabledTextColor(const QStylePainter &painter)
 {
-	auto palette = painter.style()->standardPalette();
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-	return palette.color(QPalette::Active, QPalette::PlaceholderText);
-#else
-	return palette.color(QPalette::Disabled, QPalette::Text);
-#endif
+  QColor c = qApp->palette().color(QPalette::Text);
+  c.setAlpha(80);
+  return c;
+  
+//   auto palette = painter.style()->standardPalette();
+// #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
+// 	return palette.color(QPalette::Active, QPalette::PlaceholderText);
+// #else
+// 	return palette.color(QPalette::Disabled, QPalette::Text);
+// #endif
 }
 
 void QtnPropertyDelegate::addSubItemBranchNode(

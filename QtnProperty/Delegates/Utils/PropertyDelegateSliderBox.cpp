@@ -143,8 +143,11 @@ void QtnPropertyDelegateSlideBox::draw(
 	if (valuePart < 0.0)
 		return;
 
-	auto boxRect = item.rect;
-	boxRect.adjust(2, 2, -2, -2);
+	const int boxHeight = 18;
+	const int boxWidth = 120;
+	int d = (item.rect.height() - boxHeight)/2;
+
+	auto boxRect = QRect(item.rect.left() + 3, item.rect.top() + d, std::min(boxWidth, item.rect.width() - 4), boxHeight);
 
 	auto valueRect = boxRect;
 	valueRect.setWidth(int(valuePart * valueRect.width()));
@@ -284,7 +287,10 @@ void QtnPropertyDelegateSlideBox::incrementPropertyValueInternal(int steps)
 
 double QtnPropertyDelegateSlideBox::toDragValuePart(int x, const QRect &rect)
 {
-	double result = double(x - rect.left()) / rect.width();
+	const int boxWidth = 120;
+	int rect_width = std::min(boxWidth, rect.width() - 4);
+
+	double result = double(x - rect.left() - 3) / rect_width;
 	if (result < 0.0)
 		result = 0.0;
 	else if (result > 1.0)

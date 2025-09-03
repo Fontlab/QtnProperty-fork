@@ -52,3 +52,8 @@ double qtnHundredPercent(double value)
 {
 	return std::max(0.0, std::min(100.0, value));
 }
+
+QByteArray qtnEnumButtonsShowLabelsAttr()
+{
+	return QByteArrayLiteral("showLabels");
+}

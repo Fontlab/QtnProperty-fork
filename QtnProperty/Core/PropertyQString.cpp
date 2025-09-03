@@ -61,11 +61,23 @@ QString QtnPropertyQString::getEmptyPlaceholderStr()
 	return tr("(Empty)");
 }
 
+QString QtnPropertyQString::toSingleLine(const QString &str)
+{
+  int n = str.indexOf('\n');
+  int r = str.indexOf('\r');
+  int len = n < 0 ? r : (r < 0 ? n : qMin(n, r));
+  return QString(str.data(), len);
+}
+
+
 QString QtnPropertyQString::getPlaceholderStr(
 	const QString &text, bool checkMultiline)
 {
 	if (checkMultiline && isMultilineText(text))
-		return tr("(Multiline Text)");
+  {
+    auto s = toSingleLine(text);
+    return s.isEmpty() ? tr("(Multiline Text)") : s;
+  }
 
 	if (text.isEmpty())
 		return getEmptyPlaceholderStr();

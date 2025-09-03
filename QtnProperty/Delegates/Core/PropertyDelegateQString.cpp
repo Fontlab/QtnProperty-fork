@@ -38,14 +38,6 @@ limitations under the License.
 #include <QAbstractItemView>
 #include <QListView>
 
-static QString toSingleLine(const QString &str)
-{
-	int n = str.indexOf('\n');
-	int r = str.indexOf('\r');
-	int len = n < 0 ? r : (r < 0 ? n : qMin(n, r));
-	return QString(str.data(), len);
-}
-
 QByteArray qtnMultiLineEditAttr()
 {
 	return QByteArrayLiteral("multiline_edit");
@@ -597,7 +589,7 @@ void QtnPropertyQStringListComboBoxHandler::updateValue()
 {
 	if (!editor().isEditable() || canApply())
 	{
-		property().setValue(toSingleLine(newValue), delegate()->editReason());
+		property().setValue(QtnPropertyQString::toSingleLine(newValue), delegate()->editReason());
 	}
 
 	applyReset();
@@ -823,7 +815,9 @@ void QtnPropertyQStringMultilineEditBttnHandler::updateEditor()
 		if (QtnPropertyQString::isMultilineText(text))
 		{
 			multiline = true;
-			edit->setText(toSingleLine(text));
+      edit->setPlaceholderText(QtnPropertyQString::toSingleLine(text));
+      edit->setText(QString());
+      edit->setReadOnly(true);
 		} else
 		{
 			multiline = false;
@@ -951,7 +945,7 @@ void QtnPropertyQStringLineEditHandler::updateValue()
 	if (canApply())
 	{
 		property().setValue(
-			toSingleLine(editor().text()), delegate()->editReason());
+			QtnPropertyQString::toSingleLine(editor().text()), delegate()->editReason());
 	}
 
 	applyReset();
@@ -1230,7 +1224,7 @@ void QtnPropertyQStringCandidatesComboBoxHandler::onEditingFinished()
 	disconnectLineEdit();
 	if (canApply())
 	{
-		auto text = toSingleLine(mLineEdit->text());
+		auto text = QtnPropertyQString::toSingleLine(mLineEdit->text());
 
 		if (!m_createCandidateFn || text.isEmpty() ||
 			m_candidates.contains(text, Qt::CaseInsensitive))

@@ -36,6 +36,7 @@ SOURCES +=\
     $$PWD/Delegates/Core/PropertyDelegateDouble.cpp \
     $$PWD/Delegates/Core/PropertyDelegateFloat.cpp \
     $$PWD/Delegates/Core/PropertyDelegateEnum.cpp \
+    $$PWD/Delegates/Core/PropertyDelegateEnumButtons.cpp \
     $$PWD/Delegates/Core/PropertyDelegateQRect.cpp \
     $$PWD/Delegates/Core/PropertyDelegateQRectF.cpp \
     $$PWD/Delegates/Core/PropertyDelegateEnumFlags.cpp \
@@ -126,6 +127,7 @@ HEADERS +=\
     $$PWD/Delegates/Core/PropertyDelegateDouble.h \
     $$PWD/Delegates/Core/PropertyDelegateFloat.h \
     $$PWD/Delegates/Core/PropertyDelegateEnum.h \
+    $$PWD/Delegates/Core/PropertyDelegateEnumButtons.h \
     $$PWD/Delegates/Core/PropertyDelegateQRect.h \
     $$PWD/Delegates/Core/PropertyDelegateQRectF.h \
     $$PWD/Delegates/Core/PropertyDelegateEnumFlags.h \

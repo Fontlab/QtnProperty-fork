@@ -32,7 +32,7 @@ public:
 	QtnPropertyDelegateQString(QtnPropertyQStringBase &owner);
 
 	static void Register(QtnPropertyDelegateFactory &factory);
-
+  
 protected:
 	virtual void applyAttributesImpl(
 		const QtnPropertyDelegateInfo &info) override;

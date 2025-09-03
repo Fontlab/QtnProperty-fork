@@ -80,6 +80,7 @@ public:
 	static QString getEmptyPlaceholderStr();
 	static QString getPlaceholderStr(const QString &text, bool checkMultiline);
 	static QString getReadOnlyPropertyTitleFormat();
+  static QString toSingleLine(const QString &str);
 
 	P_PROPERTY_DECL_MEMBER_OPERATORS2(
 		QtnPropertyQString, QtnPropertyQStringBase)

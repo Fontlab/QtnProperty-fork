@@ -118,6 +118,9 @@ QTN_IMPORT_EXPORT QByteArray qtnOpacityBackgroundColorAttr();
 QTN_IMPORT_EXPORT QByteArray qtnOpacityBarColorAttr();
 QTN_IMPORT_EXPORT QByteArray qtnOpacityCheckerAttr();
 
+// EnumButtons attributes
+QTN_IMPORT_EXPORT QByteArray qtnEnumButtonsShowLabelsAttr();
+
 struct QtnPropertyDelegateInfo;
 
 QTN_IMPORT_EXPORT void qtnInitPercentSpinBoxDelegate(

@@ -41,6 +41,7 @@ limitations under the License.
 #include "GUI/PropertyDelegateQVector3D.h"
 #include "GUI/PropertyDelegateButton.h"
 #include "QtnProperty/PropertyQKeySequence.h"
+#include "QtnProperty/Delegates/Core/PropertyDelegateEnumButtons.h"
 #include "QtnProperty/PropertyInt64.h"
 #include "QtnProperty/PropertyUInt64.h"
 #include "QtnProperty/MultiProperty.h"
@@ -230,6 +231,7 @@ void QtnPropertyDelegateFactory::registerDefaultDelegates(
 	QtnPropertyDelegateDouble::Register(factory);
 	QtnPropertyDelegateFloat::Register(factory);
 	QtnPropertyDelegateEnum::Register(factory);
+	QtnPropertyDelegateEnumButtons::Register(factory);
 	QtnPropertyDelegateEnumFlags::Register(factory);
 	QtnPropertyDelegateQString::Register(factory);
 	QtnPropertyDelegateQStringFile::Register(factory);

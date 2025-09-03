@@ -823,7 +823,7 @@ void QtnPropertyQStringMultilineEditBttnHandler::updateEditor()
 		if (QtnPropertyQString::isMultilineText(text))
 		{
 			multiline = true;
-			edit->setText(QString());
+			edit->setText(toSingleLine(text));
 		} else
 		{
 			multiline = false;

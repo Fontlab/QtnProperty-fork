@@ -77,8 +77,11 @@ protected:
 		if (valuePart < 0.0)
 			return;
 
-		auto boxRect = item.rect;
-		boxRect.adjust(2, 2, -2, -2);
+		const int boxHeight = 18;
+		const int boxWidth = 120;
+		int d = (item.rect.height() - boxHeight)/2;
+
+		auto boxRect = QRect(item.rect.left() + 3, item.rect.top() + d, std::min(boxWidth, item.rect.width() - 4), boxHeight);
 
 		auto &painter = *context.painter;
 		painter.save();
@@ -127,12 +130,12 @@ protected:
 		int x = boxRect.left() + int((boxRect.width() - 1) * valuePart);
 		painter.setRenderHint(QPainter::Antialiasing);
 		painter.setPen(QColor(255, 255, 255, 200));
-		painter.drawLine(x - 1, boxRect.top(), x - 1, boxRect.bottom());
-		painter.drawLine(x + 1, boxRect.top(), x + 1, boxRect.bottom());
+		painter.drawLine(x - 1, item.rect.top() + 1, x - 1, item.rect.bottom() - 1);
+		painter.drawLine(x + 1, item.rect.top() + 1, x + 1, item.rect.bottom() - 1);
 		QPen redPen(Qt::red, 1.5, Qt::DotLine);
 		redPen.setDashPattern({0.17, 1.7});
 		painter.setPen(redPen);
-		painter.drawLine(x, boxRect.top(), x, boxRect.bottom());
+		painter.drawLine(x, item.rect.top() + 1, x, item.rect.bottom() - 1);
 
 		// Border
 		if (this->m_drawBorder)

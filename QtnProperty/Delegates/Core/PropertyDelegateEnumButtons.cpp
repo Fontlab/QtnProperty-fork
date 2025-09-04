@@ -172,6 +172,7 @@ QWidget *QtnPropertyDelegateEnumButtons::createValueEditorImpl(
 
 		// Create the toolbutton
 		QToolButton *btn = new QToolButton(editor);
+    btn->setStyleSheet("QToolButton{background-color:transparent;} QToolButton:checked{background-color:palette(highlight);}");
 		btn->setCheckable(true);
 		btn->setFocusPolicy(Qt::StrongFocus);
 		btn->setProperty("qtn_enum_value", valueInfo.value());
@@ -283,8 +284,8 @@ void QtnPropertyDelegateEnumButtons::drawValueImpl(QStylePainter &painter, const
 			if (isActive)
 			{
 				QPen oldPen = painter.pen();
-				QColor hl = qApp->palette().highlight().color();
-				QColor pen = hl.darker(130);
+				QColor hl = qApp->palette().highlight().color().darker(m_isDarkMode ? 140 : 60);
+        QColor pen = hl; //.darker(130);
 				painter.setPen(pen);
 				painter.setBrush(hl);
 				painter.drawRoundedRect(iconBox, 4, 4);
@@ -308,7 +309,7 @@ void QtnPropertyDelegateEnumButtons::drawValueImpl(QStylePainter &painter, const
 				{
 					// compute text width for precise advance
 					int w = fm.width(elided);
-					QRect labelRect(x, centerY - fm.height() / 2, w + 2, fm.height());
+          QRect labelRect(x, rect.top(), w + 2, rect.height());
 					qtnDrawValueText(elided, painter, labelRect);
 					x = labelRect.right() + spacing * 2;
 				}
@@ -350,6 +351,25 @@ void QtnPropertyDelegateEnumButtons::drawValueImpl(QStylePainter &painter, const
 	});
 
 	painter.restore();
+}
+
+bool QtnPropertyDelegateEnumButtons::createSubItemValueImpl(
+	QtnDrawContext &context, QtnSubItem &subItemValue)
+{
+	// Let the base set up event handling/tooltip and default drawing
+	bool ok = QtnPropertyDelegateWithValueEditor::createSubItemValueImpl(context, subItemValue);
+	if (!ok)
+		return false;
+
+	// Wrap the original draw handler to capture QtnDrawContext and then delegate
+	auto origDraw = subItemValue.drawHandler;
+	subItemValue.drawHandler = [this, origDraw](QtnDrawContext &ctx, const QtnSubItem &item) {
+		m_isActiveRow = ctx.isActive;
+		m_isDarkMode = ctx.isDarkMode;
+		if (origDraw)
+			origDraw(ctx, item);
+	};
+	return true;
 }
 
 void QtnPropertyDelegateEnumButtons::applyAttributesImpl(const QtnPropertyDelegateInfo &info)

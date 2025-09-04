@@ -46,8 +46,13 @@ protected:
 
 	virtual void applyAttributesImpl(const QtnPropertyDelegateInfo &info) override;
 
+	virtual bool createSubItemValueImpl(
+		QtnDrawContext &context, QtnSubItem &subItemValue) override;
+
 private:
 	bool m_showLabels = true;
+	bool m_isActiveRow = false;
+	bool m_isDarkMode = false;
 };
 
 

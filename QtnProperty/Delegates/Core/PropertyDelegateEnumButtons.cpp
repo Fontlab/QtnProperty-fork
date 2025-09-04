@@ -190,8 +190,9 @@ QWidget *QtnPropertyDelegateEnumButtons::createValueEditorImpl(
 				lbl->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
 				editor->layout->addWidget(lbl);
 				editor->labels.push_back(lbl);
-				editor->layout->addSpacerItem(new QSpacerItem(4, 1, QSizePolicy::Fixed));
+        editor->layout->addSpacerItem(new QSpacerItem(2, 1, QSizePolicy::Fixed));
 			}
+      editor->layout->addSpacerItem(new QSpacerItem(4, 1, QSizePolicy::Fixed));
 		}
 		else
 		{

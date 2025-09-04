@@ -29,6 +29,7 @@ limitations under the License.
 #include <QPainterPath>
 #include <QStyleOptionToolButton>
 #include <QApplication>
+#include <PropertyView.h>
 
 // Public name of the delegate used in attributes
 QByteArray qtnEnumButtonsDelegateName()
@@ -285,7 +286,7 @@ void QtnPropertyDelegateEnumButtons::drawValueImpl(QStylePainter &painter, const
 			if (isActive)
 			{
 				QPen oldPen = painter.pen();
-				QColor hl = qApp->palette().highlight().color().darker(m_isDarkMode ? 140 : 60);
+				QColor hl = qApp->palette().highlight().color().darker(m_isDarkMode ? 140 : 70);
         QColor pen = hl; //.darker(130);
 				painter.setPen(pen);
 				painter.setBrush(hl);
@@ -364,11 +365,126 @@ bool QtnPropertyDelegateEnumButtons::createSubItemValueImpl(
 
 	// Wrap the original draw handler to capture QtnDrawContext and then delegate
 	auto origDraw = subItemValue.drawHandler;
+	auto origEvent = subItemValue.eventHandler;
 	subItemValue.drawHandler = [this, origDraw](QtnDrawContext &ctx, const QtnSubItem &item) {
 		m_isActiveRow = ctx.isActive;
 		m_isDarkMode = ctx.isDarkMode;
 		if (origDraw)
 			origDraw(ctx, item);
+	};
+
+	// Replace event handler to enable direct toggling without creating the editor
+	subItemValue.eventHandler = [this, origEvent](QtnEventContext &ctx,
+		const QtnSubItem &item, QtnPropertyToEdit *toEdit) -> bool {
+		// Only handle simple clicks when editable and not multi-value
+		if (!stateProperty()->isEditableByUser() || stateProperty()->isMultiValue())
+		{
+			return origEvent ? origEvent(ctx, item, toEdit) : false;
+		}
+
+		if (ctx.eventType() == QEvent::MouseButtonRelease)
+		{
+			QMouseEvent *me = ctx.eventAs<QMouseEvent>();
+			if (me->button() == Qt::LeftButton)
+			{
+				// Recompute layout and hit-test using same metrics as drawValueImpl
+				const QRect rect = item.rect;
+				const int spacing = 4;
+				const int iconBoxW = 24;
+				const int iconBoxH = 22;
+				const int iconPx = 16;
+				int x = rect.left();
+				const int centerY = rect.top() + rect.height() / 2;
+				QFontMetrics fm(ctx.widget->font());
+
+				const QtnEnumInfo *info = owner().enumInfo();
+				if (!info)
+					return origEvent ? origEvent(ctx, item, toEdit) : false;
+
+				int clickedValue = std::numeric_limits<int>::min();
+				bool hit = false;
+				info->forEachEnumValue([&](const QtnEnumValueInfo &v) -> bool {
+					if (v.state() != QtnEnumValueStateNone)
+						return true; // skip hidden/obsolete
+
+					const bool hasIcon = !v.icon().isNull();
+					int startX = x;
+					int endX = x;
+
+					if (hasIcon)
+					{
+						QRect iconBox(x, centerY - iconBoxH / 2, iconBoxW, iconBoxH);
+						endX = iconBox.right();
+						x = endX + spacing;
+
+						if (m_showLabels)
+						{
+							QString text = v.displayName();
+							int remaining = rect.right() - x;
+							if (remaining <= 0)
+								return false; // no more space
+							QString elided = fm.elidedText(text, Qt::ElideRight, remaining);
+							if (!elided.isEmpty())
+							{
+								int w = fm.width(elided);
+								endX = x + w + 2;
+								x = endX + spacing * 2;
+							}
+						}
+					}
+					else
+					{
+						// When active, a highlight box of iconBoxW x iconBoxH is drawn before text
+						if (owner().value() == v.value())
+						{
+							QRect hi(x, centerY - iconBoxH / 2, iconBoxW, iconBoxH);
+							endX = hi.right();
+							x = endX + spacing;
+						}
+
+						if (m_showLabels)
+						{
+							QString text = v.displayName();
+							int remaining = rect.right() - x;
+							if (remaining <= 0)
+								return false;
+							QString elided = fm.elidedText(text, Qt::ElideRight, remaining);
+							if (!elided.isEmpty())
+							{
+								int w = fm.width(elided);
+								endX = x + w;
+								x = endX + spacing * 2;
+							}
+						}
+					}
+
+					// Compose clickable span for this option
+					QRect optionRect(startX, rect.top(), qMax(0, endX - startX), rect.height());
+					if (optionRect.contains(me->pos()))
+					{
+						clickedValue = v.value();
+						hit = true;
+						return false; // stop iteration
+					}
+
+					if (x >= rect.right())
+						return false; // stop iteration, no more space
+					return true; // continue
+				});
+
+				if (hit)
+				{
+					toEdit->setup(property(), [this, clickedValue]() -> QWidget * {
+						owner().setValue(clickedValue, editReason());
+						return nullptr;
+					});
+					return true;
+				}
+			}
+		}
+
+		// Fallback to original behavior (e.g., open editor) if not handled
+		return origEvent ? origEvent(ctx, item, toEdit) : false;
 	};
 	return true;
 }

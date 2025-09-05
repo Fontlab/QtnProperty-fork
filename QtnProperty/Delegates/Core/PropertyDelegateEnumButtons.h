@@ -53,6 +53,12 @@ private:
 	bool m_showLabels = true;
 	bool m_isActiveRow = false;
 	bool m_isDarkMode = false;
+	struct OptionHit
+	{
+		QRect rect;
+		int value;
+	};
+	mutable QVector<OptionHit> m_hitRects;
 };
 
 

@@ -118,6 +118,19 @@ protected:
 		updating--;
 	}
 
+	// Avoid relying on delegate() pointer; compute reason from state property
+	virtual void updateValue() override
+	{
+		if (this->propertyBase())
+		{
+			QtnPropertyChangeReason reason = QtnPropertyChangeReasonEdit;
+			auto *sp = this->stateProperty();
+			if (sp && sp->isMultiValue())
+				reason |= QtnPropertyChangeReasonMultiEdit;
+			this->property().setValue(newValue, reason);
+		}
+	}
+
 private:
 	void onClicked()
 	{
@@ -215,6 +228,8 @@ QWidget *QtnPropertyDelegateEnumButtons::createValueEditorImpl(
 
 	// spacing between widgets is 4 px (already set on layout); ensure min height
 	editor->layout->setSpacing(3);
+  editor->layout->setContentsMargins(4, 0, 0, 0);
+  
   editor->layout->addSpacerItem(new QSpacerItem(1, 1, QSizePolicy::Expanding));
 
 	// Preselect current value
@@ -264,13 +279,16 @@ void QtnPropertyDelegateEnumButtons::drawValueImpl(QStylePainter &painter, const
 	const int iconBoxW = 24;
 	const int iconBoxH = 22;
 	const int iconPx = 16;
-	int x = rect.left();
+	int x = rect.left() + spacing;
 	const int centerY = rect.top() + rect.height() / 2;
 	const int current = owner().value();
 	const QFontMetrics &fm = painter.fontMetrics();
 
 	painter.save();
 	painter.setRenderHint(QPainter::Antialiasing, true);
+
+	// Rebuild hit rectangles during painting to avoid duplicating layout logic
+	m_hitRects.clear();
 
 	info->forEachEnumValue([&](const QtnEnumValueInfo &v) -> bool {
 		if (v.state() != QtnEnumValueStateNone)
@@ -286,15 +304,18 @@ void QtnPropertyDelegateEnumButtons::drawValueImpl(QStylePainter &painter, const
 			if (isActive)
 			{
 				QPen oldPen = painter.pen();
-				QColor hl = qApp->palette().highlight().color().darker(m_isDarkMode ? 140 : 70);
-        QColor pen = hl; //.darker(130);
+        QColor hl = qApp->palette().color(QPalette::Highlight);
+        QColor pen = m_isActiveRow ? hl.darker(m_isDarkMode ? 140 : 70) : hl;
 				painter.setPen(pen);
-				painter.setBrush(hl);
+				painter.setBrush(pen);
 				painter.drawRoundedRect(iconBox, 4, 4);
 				painter.setPen(oldPen);
 			}
 
-      v.icon().paint(&painter, QRect(x, centerY - iconPx / 2, iconBoxW, iconPx));
+			v.icon().paint(&painter, QRect(x, centerY - iconPx / 2, iconBoxW, iconPx));
+
+			// clickable: icon area
+			m_hitRects.push_back({QRect(iconBox.left(), rect.top(), iconBox.width(), rect.height()), v.value()});
 
 			x = iconBox.right() + spacing;
 
@@ -311,8 +332,10 @@ void QtnPropertyDelegateEnumButtons::drawValueImpl(QStylePainter &painter, const
 				{
 					// compute text width for precise advance
 					int w = fm.width(elided);
-          QRect labelRect(x, rect.top(), w + 2, rect.height());
+					QRect labelRect(x, rect.top(), w + 2, rect.height());
 					qtnDrawValueText(elided, painter, labelRect);
+					// clickable: label area
+					m_hitRects.push_back({QRect(labelRect.left(), rect.top(), labelRect.width(), rect.height()), v.value()});
 					x = labelRect.right() + spacing * 2;
 				}
 			}
@@ -323,12 +346,14 @@ void QtnPropertyDelegateEnumButtons::drawValueImpl(QStylePainter &painter, const
 			{
 				QRect hi(x, centerY - iconBoxH / 2, iconBoxW, iconBoxH);
 				QPen oldPen = painter.pen();
-				QColor hl = qApp->palette().highlight().color();
-				QColor pen = hl.darker(130);
+        QColor hl = qApp->palette().color(QPalette::Highlight);
+        QColor pen = m_isActiveRow ? hl.darker(m_isDarkMode ? 140 : 70) : hl;
 				painter.setPen(pen);
-				painter.setBrush(hl);
+				painter.setBrush(pen);
 				painter.drawRoundedRect(hi, 4, 4);
 				painter.setPen(oldPen);
+				// clickable: highlight box area
+				m_hitRects.push_back({QRect(hi.left(), rect.top(), hi.width(), rect.height()), v.value()});
 				x = hi.right() + spacing;
 			}
 
@@ -343,6 +368,8 @@ void QtnPropertyDelegateEnumButtons::drawValueImpl(QStylePainter &painter, const
 				int w = fm.width(elided);
 				QRect labelRect(x, centerY - fm.height() / 2, w, fm.height());
 				qtnDrawValueText(elided, painter, labelRect);
+				// clickable: label area
+				m_hitRects.push_back({QRect(labelRect.left(), rect.top(), labelRect.width(), rect.height()), v.value()});
 				x = labelRect.right() + spacing * 2;
 			}
 		}
@@ -382,97 +409,32 @@ bool QtnPropertyDelegateEnumButtons::createSubItemValueImpl(
 			return origEvent ? origEvent(ctx, item, toEdit) : false;
 		}
 
+		if (ctx.eventType() == QEvent::MouseButtonDblClick)
+		{
+			// Suppress editor activation on double-click for this delegate
+			return true;
+		}
+
 		if (ctx.eventType() == QEvent::MouseButtonRelease)
 		{
 			QMouseEvent *me = ctx.eventAs<QMouseEvent>();
 			if (me->button() == Qt::LeftButton)
 			{
-				// Recompute layout and hit-test using same metrics as drawValueImpl
-				const QRect rect = item.rect;
-				const int spacing = 4;
-				const int iconBoxW = 24;
-				const int iconBoxH = 22;
-				const int iconPx = 16;
-				int x = rect.left();
-				const int centerY = rect.top() + rect.height() / 2;
-				QFontMetrics fm(ctx.widget->font());
-
-				const QtnEnumInfo *info = owner().enumInfo();
-				if (!info)
-					return origEvent ? origEvent(ctx, item, toEdit) : false;
+				// Use hit rects computed during drawing
+				if (m_hitRects.isEmpty())
+					return true; // consume click, do not open editor
 
 				int clickedValue = std::numeric_limits<int>::min();
-				bool hit = false;
-				info->forEachEnumValue([&](const QtnEnumValueInfo &v) -> bool {
-					if (v.state() != QtnEnumValueStateNone)
-						return true; // skip hidden/obsolete
-
-					const bool hasIcon = !v.icon().isNull();
-					int startX = x;
-					int endX = x;
-
-					if (hasIcon)
+				for (const auto &h : m_hitRects)
+				{
+					if (h.rect.intersects(item.rect) && h.rect.contains(me->pos()))
 					{
-						QRect iconBox(x, centerY - iconBoxH / 2, iconBoxW, iconBoxH);
-						endX = iconBox.right();
-						x = endX + spacing;
-
-						if (m_showLabels)
-						{
-							QString text = v.displayName();
-							int remaining = rect.right() - x;
-							if (remaining <= 0)
-								return false; // no more space
-							QString elided = fm.elidedText(text, Qt::ElideRight, remaining);
-							if (!elided.isEmpty())
-							{
-								int w = fm.width(elided);
-								endX = x + w + 2;
-								x = endX + spacing * 2;
-							}
-						}
+						clickedValue = h.value;
+						break;
 					}
-					else
-					{
-						// When active, a highlight box of iconBoxW x iconBoxH is drawn before text
-						if (owner().value() == v.value())
-						{
-							QRect hi(x, centerY - iconBoxH / 2, iconBoxW, iconBoxH);
-							endX = hi.right();
-							x = endX + spacing;
-						}
+				}
 
-						if (m_showLabels)
-						{
-							QString text = v.displayName();
-							int remaining = rect.right() - x;
-							if (remaining <= 0)
-								return false;
-							QString elided = fm.elidedText(text, Qt::ElideRight, remaining);
-							if (!elided.isEmpty())
-							{
-								int w = fm.width(elided);
-								endX = x + w;
-								x = endX + spacing * 2;
-							}
-						}
-					}
-
-					// Compose clickable span for this option
-					QRect optionRect(startX, rect.top(), qMax(0, endX - startX), rect.height());
-					if (optionRect.contains(me->pos()))
-					{
-						clickedValue = v.value();
-						hit = true;
-						return false; // stop iteration
-					}
-
-					if (x >= rect.right())
-						return false; // stop iteration, no more space
-					return true; // continue
-				});
-
-				if (hit)
+				if (clickedValue != std::numeric_limits<int>::min())
 				{
 					toEdit->setup(property(), [this, clickedValue]() -> QWidget * {
 						owner().setValue(clickedValue, editReason());
@@ -480,10 +442,13 @@ bool QtnPropertyDelegateEnumButtons::createSubItemValueImpl(
 					});
 					return true;
 				}
+
+				// No hit: consume the click to avoid opening the editor
+				return true;
 			}
 		}
 
-		// Fallback to original behavior (e.g., open editor) if not handled
+		// Fallback to original behavior for other events
 		return origEvent ? origEvent(ctx, item, toEdit) : false;
 	};
 	return true;

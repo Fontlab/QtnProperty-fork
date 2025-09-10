@@ -207,19 +207,17 @@ void QtnPropertyDelegateQColorSolid::drawValueImpl(
 	QRect boxRect(rect.left() + 2, rect.top() + y, blockWidth, blockHeight);
   
   painter.save();
+  painter.setRenderHint(QPainter::Antialiasing);
   
   QPainterPath clip_path;
-  clip_path.addRoundedRect(boxRect, 3, 3);
+  clip_path.addRoundedRect(boxRect.adjusted(1, 1, -1, -1), 2, 2);
   painter.setClipPath(clip_path);
   
   painter.fillRect(boxRect, owner());
   painter.setClipping(false);
   
   QStyleOptionFrame option;
-  
   option.rect = boxRect;
-//  option.palette.setCurrentColorGroup(w->isEnabled() ? QPalette::Active : QPalette::Disabled);
-  
   dynamic_cast<QApplication*>(qApp)->style()->drawPrimitive(QStyle::PE_FrameLineEdit, &option, &painter, nullptr);
   
   QPointF pt(boxRect.right() + 8, QRectF(boxRect).center().y());  

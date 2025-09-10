@@ -19,6 +19,9 @@ limitations under the License.
 
 #include "PropertyDelegateSliderBox.h"
 
+#include <QPainterPath>
+#include <QApplication>
+
 // OpacityBox delegate: visually represents 0..1 range as a checkerboard
 // background with a left-to-right alpha gradient of a configurable color.
 
@@ -77,21 +80,27 @@ protected:
 		if (valuePart < 0.0)
 			return;
 
-		const int boxHeight = 18;
+		const int boxHeight = 20;
 		const int boxWidth = 120;
 		int d = (item.rect.height() - boxHeight)/2;
 
-		auto boxRect = QRect(item.rect.left() + 3, item.rect.top() + d, std::min(boxWidth, item.rect.width() - 4), boxHeight);
+		auto boxRect = QRect(item.rect.left() + 2, item.rect.top() + d, std::min(boxWidth, item.rect.width() - 4), boxHeight);
 
 		auto &painter = *context.painter;
 		painter.save();
-
+    painter.setRenderHint(QPainter::Antialiasing);
+    
+    QPainterPath clip_path;
+    clip_path.addRoundedRect(boxRect.adjusted(1, 1, -1, -1), 2, 2);
+    painter.setClipPath(clip_path);
+    
+    const bool isDark = context.isDarkMode;
+    
 		// Background (checkerboard or solid color)
 		if (m_useCheckerBackground && !boxRect.isEmpty())
 		{
 			QImage img(boxRect.size(), QImage::Format_ARGB32_Premultiplied);
 			// two grays like typical transparency pattern, adapted for dark mode
-			const bool isDark = context.isDarkMode;
 			QColor c1 = isDark ? QColor("#1e1e1e") : QColor("#fafafa");
 			QColor c2 = isDark ? QColor("#323334") : QColor("#f4f4f4");
 			for (int y = 0; y < img.height(); ++y)
@@ -125,24 +134,37 @@ protected:
 		grad.setColorAt(0.0, c0);
 		grad.setColorAt(1.0, c1);
 		painter.fillRect(boxRect, grad);
-
+    
+    painter.setClipping(false);
+    
+    QStyleOptionFrame option;
+    option.rect = boxRect;
+    dynamic_cast<QApplication*>(qApp)->style()->drawPrimitive(QStyle::PE_FrameLineEdit, &option, &painter, nullptr);
+    
 		// Marker at current value
 		int x = boxRect.left() + int((boxRect.width() - 1) * valuePart);
-		painter.setRenderHint(QPainter::Antialiasing);
-		painter.setPen(QColor(255, 255, 255, 200));
-		painter.drawLine(x - 1, item.rect.top() + 1, x - 1, item.rect.bottom() - 1);
-		painter.drawLine(x + 1, item.rect.top() + 1, x + 1, item.rect.bottom() - 1);
-		QPen redPen(Qt::red, 1.5, Qt::DotLine);
-		redPen.setDashPattern({0.17, 1.7});
+    
+    QColor bg_color = isDark ? Qt::black : Qt::white;
+    bg_color.setAlpha(200);
+    painter.setPen(bg_color);
+    
+    int y0 = boxRect.top() - 1;
+    int y1 = boxRect.bottom() + 1;
+    
+		painter.drawLine(x - 1, y0, x - 1, y1);
+		painter.drawLine(x + 1, y0, x + 1, y1);
+		// QPen redPen(Qt::red, 1.5, Qt::DotLine);
+		// redPen.setDashPattern({0.17, 1.7});
+    QPen redPen(Qt::red, 1.5);
 		painter.setPen(redPen);
-		painter.drawLine(x, item.rect.top() + 1, x, item.rect.bottom() - 1);
+		painter.drawLine(x, y0, x, y1);
 
 		// Border
-		if (this->m_drawBorder)
-		{
-			painter.setPen(context.textColorFor(this->stateProperty()->isEditableByUser()));
-			painter.drawRect(boxRect);
-		}
+		// if (this->m_drawBorder)
+		// {
+		// 	painter.setPen(context.textColorFor(this->stateProperty()->isEditableByUser()));
+		// 	painter.drawRect(boxRect);
+		// }
 
 		painter.restore();
 

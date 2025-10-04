@@ -23,6 +23,7 @@ limitations under the License.
 #include <QLineEdit>
 #include <QKeyEvent>
 #include <QIcon>
+#include <QApplication>
 
 static QIcon qtnResetIcon;
 
@@ -197,8 +198,8 @@ void QtnPropertyDelegateWithValues::addSubItemSelection(
 		// highlight background if active property
 		if (context.isActive)
 		{
-			context.painter->fillRect(
-				item.rect, context.palette().color(QPalette::Highlight));
+      QColor active_color = context.highlightColor();
+			context.painter->fillRect(item.rect, active_color); //qApp->palette().color(QPalette::Highlight));
 		}
 	};
 
@@ -364,12 +365,12 @@ bool QtnPropertyDelegateWithValueEditor::createSubItemValueImpl(
 		auto oldPen = context.painter->pen();
 		auto isNormalText = stateProperty()->isEditableByUser() &&
 			!stateProperty()->isMultiValue();
-		auto cg = isNormalText ? context.colorGroup() : QPalette::Disabled;
+//		auto cg = isNormalText ? context.colorGroup() : QPalette::Disabled;
 		auto color = context.textColorFor(isNormalText);
-		auto bgColor = context.isActive
-			? context.palette().color(cg, QPalette::Highlight)
-			: context.alternateColor();
-
+    auto bgColor = context.isActive
+                       ? context.highlightColor() //palette().color(cg, QPalette::Highlight)
+                       : context.alternateColor();
+    
 		context.painter->setBrush(bgColor);
 		context.painter->setPen(color);
 		drawValueImpl(*context.painter, item.rect);

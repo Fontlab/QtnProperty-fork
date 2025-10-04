@@ -23,6 +23,7 @@ limitations under the License.
 
 #include <QMouseEvent>
 #include <QToolTip>
+#include <QApplication>
 
 QtnSubItem::QtnSubItem(const QRect &rect)
 	: rect(rect)
@@ -246,6 +247,13 @@ const QPalette &QtnDrawContext::palette() const
 QPalette::ColorGroup QtnDrawContext::colorGroup() const
 {
 	return palette().currentColorGroup();
+}
+
+QColor QtnDrawContext::highlightColor() const
+{
+  QColor c = isDarkMode ? QColor("#374965") : qApp->palette().color(QPalette::Light);
+  c.setAlpha(100);
+  return c;
 }
 
 QColor QtnDrawContext::alternateColor() const

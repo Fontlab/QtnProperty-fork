@@ -57,7 +57,7 @@ void QtnPropertyDelegatePropertySet::createSubItemsImpl(
 
 				// fill background
 				if (context.isActive)
-					context.painter->fillRect(item.rect, context.palette().color(QPalette::Highlight));
+					context.painter->fillRect(item.rect, context.highlightColor());
 					
 //				context.painter->fillRect(item.rect,
 //					(context.isActive)

@@ -80,7 +80,9 @@ QString QtnPropertyQString::getPlaceholderStr(
   }
 
 	if (text.isEmpty())
+  {
 		return getEmptyPlaceholderStr();
+  }
 
 	return QString();
 }

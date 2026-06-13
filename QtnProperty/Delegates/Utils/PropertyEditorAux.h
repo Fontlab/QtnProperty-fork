@@ -39,6 +39,7 @@ public:
 	QLineEdit *lineEdit;
 	QToolButton *toolButton;
 	QToolButton *secondaryButton = nullptr;
+	QToolButton *thirdButton = nullptr;
 };
 
 class QTN_IMPORT_EXPORT QtnPropertyComboBox : public QComboBox

@@ -37,6 +37,9 @@ limitations under the License.
 #include <QStringListModel>
 #include <QAbstractItemView>
 #include <QListView>
+#include <QProcess>
+#include <QDesktopServices>
+#include <QUrl>
 
 QByteArray qtnMultiLineEditAttr()
 {
@@ -138,6 +141,26 @@ QByteArray qtnFileClearButtonToolTipAttr()
 	return QByteArrayLiteral("clearButtonToolTip");
 }
 
+QByteArray qtnFileBrowseButtonAttr()
+{
+	return QByteArrayLiteral("browseButton");
+}
+
+QByteArray qtnFileBrowseButtonIconAttr()
+{
+	return QByteArrayLiteral("browseButtonIcon");
+}
+
+QByteArray qtnFileBrowseButtonTextAttr()
+{
+	return QByteArrayLiteral("browseButtonText");
+}
+
+QByteArray qtnFileBrowseButtonToolTipAttr()
+{
+	return QByteArrayLiteral("browseButtonToolTip");
+}
+
 QByteArray qtnGetCandidatesFnAttr()
 {
 	return QByteArrayLiteral("GetCandidatesFn");
@@ -171,6 +194,30 @@ QByteArray qtnSelectFileDelegate()
 QByteArray qtnCallbackDelegate()
 {
 	return QByteArrayLiteral("Callback");
+}
+
+// Reveal the file/directory in Finder (macOS) or Explorer (Windows).
+// Falls back to opening the containing folder on other platforms.
+static void qtnRevealInFileBrowser(const QString &filePath)
+{
+	if (filePath.isEmpty())
+		return;
+
+	QFileInfo fileInfo(filePath);
+
+#if defined(Q_OS_MAC)
+	QProcess::startDetached(QStringLiteral("/usr/bin/open"),
+		QStringList() << QStringLiteral("-R") << fileInfo.absoluteFilePath());
+#elif defined(Q_OS_WIN)
+	QProcess::startDetached(QStringLiteral("explorer.exe"),
+		QStringList() << QStringLiteral("/select,")
+					  << QDir::toNativeSeparators(
+							 fileInfo.absoluteFilePath()));
+#else
+	QDesktopServices::openUrl(QUrl::fromLocalFile(fileInfo.isDir()
+			? fileInfo.absoluteFilePath()
+			: fileInfo.absolutePath()));
+#endif
 }
 
 class QtnPropertyQStringLineEditHandler
@@ -251,7 +298,6 @@ QWidget *QtnPropertyDelegateQString::createValueEditorImpl(
 	if (m_multiline)
 	{
 		QtnLineEditBttn *editor = new QtnLineEditBttn(parent);
-		editor->setGeometry(rect);
 
 		editor->lineEdit->setMaxLength(m_maxLength);
 		editor->lineEdit->setPlaceholderText(m_placeholder);
@@ -400,7 +446,7 @@ QWidget *QtnPropertyDelegateQStringFile::createValueEditorImpl(
 	QWidget *parent, const QRect &rect, QtnInplaceInfo *inplaceInfo)
 {
 	QtnLineEditBttn *editor = new QtnLineEditBttn(parent);
-	editor->setGeometry(rect);
+  editor->setGeometry(rect);
 
 	auto handler = new QtnPropertyQStringFileLineEditBttnHandler(this, *editor);
 	handler->applyAttributes(m_editorAttributes);
@@ -647,6 +693,10 @@ void QtnPropertyQStringFileLineEditBttnHandler::applyAttributes(
 
 	// Placeholder override
 	info.loadAttribute(qtnPlaceholderAttr(), placeholder);
+  if (!placeholder.isEmpty() && editor().lineEdit)
+  {
+    editor().lineEdit->setPlaceholderText(placeholder);
+  }
 
 	// Custom icon for the browse tool button
 	QIcon browseIcon = info.getAttribute<QIcon>(qtnFileButtonIconAttr(), QIcon());
@@ -697,6 +747,50 @@ void QtnPropertyQStringFileLineEditBttnHandler::applyAttributes(
 				property().setValue(QString(), delegate()->editReason());
 				updateEditor();
 			}
+		});
+	}
+
+	// Configure browse button (reveal in Finder/Explorer)
+	bool enableBrowse =
+		info.getAttribute<bool>(qtnFileBrowseButtonAttr(), false);
+	if (enableBrowse && editor().thirdButton)
+	{
+		QToolButton *btn = editor().thirdButton;
+		btn->setVisible(true);
+		// icon
+		QIcon browseBtnIcon =
+			info.getAttribute<QIcon>(qtnFileBrowseButtonIconAttr(), QIcon());
+		if (browseBtnIcon.isNull())
+		{
+			const QString browseIconPath = info.getAttribute<QString>(
+				qtnFileBrowseButtonIconAttr(), QString());
+			if (!browseIconPath.isEmpty())
+				browseBtnIcon = QIcon(browseIconPath);
+		}
+		if (!browseBtnIcon.isNull())
+			btn->setIcon(browseBtnIcon);
+		// text
+		const QString browseText =
+			info.getAttribute<QString>(qtnFileBrowseButtonTextAttr(), QString());
+		if (!browseText.isEmpty())
+			btn->setText(browseText);
+		else if (btn->icon().isNull())
+			btn->setText(QString::fromUtf8("\u2192"));
+		// tooltip
+		btn->setToolTip(info.getAttribute<QString>(
+			qtnFileBrowseButtonToolTipAttr(), QString()));
+
+		QObject::connect(btn, &QToolButton::clicked, &editor(), [this]() {
+			QString filePath = property().value();
+			if (filePath.isEmpty())
+				filePath = placeholder;
+			if (filePath.isEmpty())
+				return;
+
+			if (QDir::isRelativePath(filePath) && !defaultDirectory.isEmpty())
+				filePath = QDir(defaultDirectory).filePath(filePath);
+
+			qtnRevealInFileBrowser(filePath);
 		});
 	}
 }

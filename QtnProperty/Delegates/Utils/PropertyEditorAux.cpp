@@ -38,6 +38,7 @@ QtnLineEditBttn::QtnLineEditBttn(
 		lineEdit = new QLineEdit(this);
 	else
 		lineEdit->setParent(this);
+  
 	this->lineEdit = lineEdit;
 	layout->addWidget(lineEdit);
 
@@ -56,6 +57,12 @@ QtnLineEditBttn::QtnLineEditBttn(
 	secondaryButton->setFocusPolicy(Qt::StrongFocus);
   secondaryButton->setFixedSize(24, 22);
 	layout->addWidget(secondaryButton);
+
+	thirdButton = new QToolButton(this);
+	thirdButton->setVisible(false);
+	thirdButton->setFocusPolicy(Qt::StrongFocus);
+  thirdButton->setFixedSize(24, 22);
+	layout->addWidget(thirdButton);
 
 	setFocusProxy(lineEdit);
 	setAutoFillBackground(true);

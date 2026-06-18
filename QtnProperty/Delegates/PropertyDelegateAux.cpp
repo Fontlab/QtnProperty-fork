@@ -143,7 +143,9 @@ bool QtnSubItem::event(QtnEventContext &context)
 			case QEvent::MouseButtonDblClick:
 			{
 				auto event = context.eventAs<QMouseEvent>();
-				if (event->button() == Qt::LeftButton)
+				if (event->button() == Qt::LeftButton &&
+					(context.eventType() != QEvent::MouseButtonDblClick ||
+						m_state != QtnSubItemStatePushed))
 					context.grabMouse(this, event->pos());
 				break;
 			}

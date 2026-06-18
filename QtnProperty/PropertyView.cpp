@@ -623,6 +623,8 @@ void QtnPropertyView::mouseReleaseEvent(QMouseEvent *e)
 					}
 				}
 			}
+			if (m_grabMouseSubItem)
+				releaseMouseForSubItem(m_grabMouseSubItem, e->pos());
 			m_pendingRowToggle = false;
 			emit mouseReleased(e);
 			QAbstractScrollArea::mouseReleaseEvent(e);

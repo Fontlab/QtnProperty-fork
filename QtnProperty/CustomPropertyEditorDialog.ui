@@ -89,7 +89,7 @@
     <string>Duplicate...</string>
    </property>
    <property name="toolTip">
-    <string notr="true">Duplicate</string>
+    <string>Duplicate</string>
    </property>
   </action>
   <action name="actionPropertyOptions">
@@ -97,7 +97,7 @@
     <string>Options...</string>
    </property>
    <property name="toolTip">
-    <string notr="true">Options</string>
+    <string>Options</string>
    </property>
    <property name="statusTip">
     <string/>

@@ -20,6 +20,7 @@
 #include <QFileInfo>
 #include <QSet>
 #include <QStack>
+#include <QRegularExpression>
 
 PEG &peg = PEG::instance();
 
@@ -95,6 +96,31 @@ static QString capitalize(QString text)
 	return text.left(1).toUpper() + text.mid(1);
 }
 
+
+// Only literal presentation strings are translated. Names, values, help IDs,
+// delegate types and arbitrary C++ expressions retain their original meaning.
+static QString translatedLiteral(const QString &value, const QString &role)
+{
+    static const QRegularExpression literal(QStringLiteral("^\\\"(?:[^\\\"\\\\]|\\\\.)*\\\"$"));
+    QString text = value.trimmed();
+    if (peg.translationContext.isEmpty() || text == QStringLiteral("\"\"") ||
+        text.startsWith(QStringLiteral("\"@")) || !literal.match(text).hasMatch())
+        return value;
+    // Qt 5 lupdate consumes following hex digits after \u escapes greedily.
+    // Adjacent C++ literals preserve runtime text and extraction identically.
+    static const QRegularExpression unicodeEscape(QStringLiteral("(\\\\u[0-9A-Fa-f]{4})(?=[0-9A-Fa-f])"));
+    text.replace(unicodeEscape, QStringLiteral("\\1\" \""));
+    return QStringLiteral("QCoreApplication::translate(\"%1\", %2, \"%3\")")
+        .arg(peg.translationContext, text, peg.translationScope + "." + role);
+}
+
+static bool translatedAttribute(const QString &name)
+{
+    return name == "displayName" || name == "description" ||
+        name == "placeholder" || name == "clearButtonToolTip" ||
+        name == "browseButtonToolTip";
+}
+
 static void assignmentSetCode(
 	QString prefix, Assignments::ConstIterator assignment, TextStreamIndent &s)
 {
@@ -104,17 +130,21 @@ static void assignmentSetCode(
 	if (!assignment.value().member.isEmpty())
 		name += assignment.value().member + ".";
 
+	const QString value = translatedAttribute(assignment.key())
+		? translatedLiteral(assignment.value().value, name + assignment.key())
+		: assignment.value().value;
+
 	if (assignment.key() != "description" && assignment.key() != "help")
 	{
 		s.newLine() << QString("%1set%2(%3);")
 						   .arg(name, capitalize(assignment.key()),
-							   assignment.value().value);
+							   value);
 	} else
 	{
 		QString var = name + assignment.key();
 		var.replace(".", "_");
 		s.newLine() << QString("static QString %1 = %2;")
-						   .arg(var, assignment.value().value);
+						   .arg(var, value);
 		s.newLine() << QString("%1set%2(%3);")
 						   .arg(name, capitalize(assignment.key()), var);
 	}
@@ -159,7 +189,7 @@ void DelegateInfo::generateCode(TextStreamIndent &s) const
 	for (auto it = attributes.begin(); it != attributes.end(); ++it)
 	{
 		s.newLine() << QString("info.attributes[\"%1\"] = %2;")
-						   .arg(it.key(), it.value());
+						   .arg(it.key(), translatedAttribute(it.key()) ? translatedLiteral(it.value(), "delegate." + it.key()) : it.value());
 	}
 
 	s.newLine() << "return info;";
@@ -297,6 +327,7 @@ void PropertySetCode::generateHFile(TextStreamIndent &s) const
 void PropertySetCode::generateCppFile(TextStreamIndent &s) const
 {
 	generateSubPropertySetsImplementations(s);
+	peg.translationScope = selfType;
 
 	// constructor implementation
 	s << Qt::endl;
@@ -760,6 +791,7 @@ void EnumCode::generateHFile(TextStreamIndent &s) const
 
 void EnumCode::generateCppFile(TextStreamIndent &s) const
 {
+	peg.translationScope = name;
 	s.newLine() << QString("static QtnEnumInfo& create_%1_info()").arg(name);
 	s.newLine() << "{";
 	s.addIndent();
@@ -781,7 +813,7 @@ void EnumCode::generateCppFile(TextStreamIndent &s) const
 		}
 		s.newLine() << QString(
 			"staticValues.append(QtnEnumValueInfo(%1::%2, \"%2\", %3%4));")
-						   .arg(name, enumItem.name, enumItem.text, states);
+						   .arg(name, enumItem.name, translatedLiteral(enumItem.text, enumItem.name), states);
 	}
 	s.newLine();
 	s.newLine() << QString("static QtnEnumInfo enumInfo(\"%1\", staticValues);")
@@ -942,6 +974,11 @@ bool PEG::start(QString hFileName, QString cppFileName)
 
 	m_hStream.setDevice(hFile.take());
 	m_cppStream.setDevice(cppFile.take());
+	if (!translationContext.isEmpty())
+	{
+		m_hStream.setCodec("UTF-8");
+		m_cppStream.setCodec("UTF-8");
+	}
 
 	m_isValid = true;
 	return true;
@@ -989,6 +1026,8 @@ void PEG::generateHFile()
 void PEG::generateCppFile()
 {
 	m_cppStream << "#include \"" << m_hFileName << "\"" << Qt::endl;
+	if (!translationContext.isEmpty())
+		m_cppStream << "#include <QCoreApplication>" << Qt::endl;
 	for (auto it = code.begin(); it != code.end(); ++it)
 	{
 		(*it)->generateCppFile(m_cppStream);

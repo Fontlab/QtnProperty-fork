@@ -114,6 +114,10 @@ public:
 
     void fatalError(QString error);
 
+    // Opt-in, set by QtnPEG --translate. Empty preserves legacy output.
+    QString translationContext;
+    QString translationScope;
+
     QVector<QSharedPointer<Code> > code;
 
 private:

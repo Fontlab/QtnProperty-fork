@@ -18,6 +18,8 @@
 
 #include <QCoreApplication>
 #include <QFileInfo>
+#include <QFile>
+#include <QStringList>
 #include <QRegExp>
 
 extern int yyparse();
@@ -32,17 +34,22 @@ int main(int argc, char *argv[])
 	QCoreApplication app(argc, argv);
 	app.setAttribute(Qt::AA_Use96Dpi, true);
 
+	QStringList args = app.arguments();
+	const bool translate = args.removeAll(QStringLiteral("--translate")) > 0;
+	const int count = args.size();
+
 	// check argument
-	if (argc < 2 || argc > 4)
+	if (count < 2 || count > 4)
 	{
-		QTextStream(stdout) << QString("peg usage: peg <input file> [<cpp "
+		QTextStream(stdout) << QString("peg usage: peg [--translate] <input file> [<cpp "
 									   "output file> [h output file]]")
 							<< endl;
 		return 0;
 	}
 
 	// generate output file names
-	const char *inputFileName = argv[1];
+	const QByteArray inputFileBytes = QFile::encodeName(args.at(1));
+	const char *inputFileName = inputFileBytes.constData();
 	QFileInfo fi(inputFileName);
 	if (!fi.exists())
 	{
@@ -53,28 +60,30 @@ int main(int argc, char *argv[])
 	}
 
 	QString cppFileName;
-	if (argc < 3)
+	if (count < 3)
 	{
 		cppFileName = fi.path() + "/" + fi.completeBaseName() + ".peg.cpp";
 	} else
 	{
-		cppFileName = argv[2];
+		cppFileName = args.at(2);
 	}
 
 	QString hFileName;
-	if (argc < 3)
+	if (count < 3)
 	{
 		hFileName = fi.path() + "/" + fi.completeBaseName() + ".peg.h";
-	} else if (argc < 4)
+	} else if (count < 4)
 	{
 		hFileName = cppFileName;
 		hFileName.replace(QRegExp(".cpp$"), ".h");
 	} else
 	{
-		hFileName = argv[3];
+		hFileName = args.at(3);
 	}
 
 	PEG &peg = PEG::instance();
+	if (translate)
+		peg.translationContext = QStringLiteral("FontLabProperties.") + fi.completeBaseName();
 
 	if (!peg.start(hFileName, cppFileName))
 		return 1;

@@ -26,6 +26,12 @@ peg_header.name = PEG Headers ${QMAKE_FILE_IN}
 peg_header.input = PEG_SOURCES
 peg_header.output = ${QMAKE_FILE_PATH}/${QMAKE_FILE_BASE}.peg.h
 peg_header.commands = $$escape_expand(\\n) # empty command
+unix {
+    # The C++ generator also writes this header. Wait for it before repairing a
+    # missing/stale header, then mark the header newer than both inputs/outputs.
+    peg_header.depends = ${QMAKE_FILE_PATH}/${QMAKE_FILE_BASE}.peg.cpp
+    peg_header.commands = (test -f "${QMAKE_FILE_OUT}" && test ! "${QMAKE_FILE_IN}" -nt "${QMAKE_FILE_OUT}" || $$PEG_TOOL $$PEG_FLAGS "${QMAKE_FILE_IN}") && touch "${QMAKE_FILE_OUT}"
+}
 peg_header.CONFIG += target_predeps no_link
 peg_header.variable_out = PEG_MOC_HEADERS
 QMAKE_EXTRA_COMPILERS += peg_header

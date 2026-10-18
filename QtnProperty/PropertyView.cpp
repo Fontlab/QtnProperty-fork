@@ -413,7 +413,8 @@ void QtnPropertyView::drawItem(
 	auto delegate = vItem.item->delegate.get();
 	Q_ASSERT(delegate); // cannot be null
 
-	QMargins margins(m_valueLeftMargin + rect.height() * vItem.level, 0, 0, 0);
+	// Keep value editors and reset buttons clear of the vertical scrollbar.
+	QMargins margins(m_valueLeftMargin + rect.height() * vItem.level, 0, 8, 0);
 	bool isActive = (m_activeProperty == vItem.item->property);
 
 	QtnDrawContext drawContext{ &painter, this, rect, margins, splitPosition(),

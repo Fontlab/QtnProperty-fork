@@ -298,6 +298,7 @@ QWidget *QtnPropertyDelegateQString::createValueEditorImpl(
 	if (m_multiline)
 	{
 		QtnLineEditBttn *editor = new QtnLineEditBttn(parent);
+		editor->setGeometry(rect);
 
 		editor->lineEdit->setMaxLength(m_maxLength);
 		editor->lineEdit->setPlaceholderText(m_placeholder);

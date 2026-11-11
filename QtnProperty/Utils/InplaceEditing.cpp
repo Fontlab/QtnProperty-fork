@@ -19,6 +19,7 @@ limitations under the License.
 #include <QApplication>
 #include <QKeyEvent>
 #include <QDebug>
+#include <QTimer>
 
 class QtnInplaceEditorHandler : public QObject
 {
@@ -90,7 +91,16 @@ void onInplaceWidgetDestroyed(QObject *object)
 	QWidget *parent = qobject_cast<QWidget *>(object->parent());
 
 	if (parent)
-		parent->setFocus();
+	{
+		// Child deletion can run after the parent's QWidget destructor has
+		// already cleared focus. Restoring it here would leave the window's
+		// focus_child pointing at that parent after it has been freed.
+		// The context cancels restoration if the parent is also destroyed.
+		QTimer::singleShot(0, parent, [parent]() {
+			if (parent->isVisible() && !g_inplaceEditor)
+				parent->setFocus();
+		});
+	}
 }
 
 bool qtnStopInplaceEdit(bool delete_later, bool restoreParentFocus)
